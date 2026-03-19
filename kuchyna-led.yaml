@@ -1,0 +1,82 @@
+substitutions:
+  device_name: kuchyna-led
+  friendly_name: Kuchyna LED
+  room: Kuchyna
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.5"
+  device_type: ESP32 WROOM
+  i2c_sda: GPIO21
+  i2c_scl: GPIO22
+  bme280_sensorName: "Digestor " # ${friendly_name}
+  pwm_pin: GPIO17
+  pwm_pin2: GPIO18
+  pwm_pin3: GPIO19
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  common: !include pavolholes_common/common.yaml
+  esp32: !include pavolholes_common/esp32.yaml
+  # debug: !include pavolholes_common/debug.yaml
+  esp32BluetoothProxy: !include pavolholes_common/esp32BluetoothProxy.yaml # including this changes the framework so the first time it have to be loaded to ESP using USB cable, not OTA!
+  bme_280: !include pavolholes_common/sensor/bme280.yaml
+
+esphome:
+  on_boot:
+    priority: 800
+    then:
+      - light.turn_off: light_pwm
+      - light.turn_off: light_pwm2
+      - light.turn_off: light_pwm3
+
+# logger:
+#   level: VERY_VERBOSE # (default is DEBUG)
+#   logs:
+#     json: INFO
+#     sensor: INFO
+#     adc: INFO
+#     ntc: INFO
+#     resistance: INFO
+#     text_sensor: INFO
+#     api: INFO
+#     ledc: INFO
+
+output:
+  - platform: ledc
+    id: output_pwm
+    pin: ${pwm_pin}
+    frequency: 300Hz
+
+  - platform: ledc
+    id: output_pwm2
+    pin: ${pwm_pin2}
+    frequency: 300Hz
+
+  - platform: ledc
+    id: output_pwm3
+    pin: ${pwm_pin3}
+    frequency: 300Hz
+
+light:
+  - platform: monochromatic
+    name: "${friendly_name} Hore"
+    icon: mdi:led-strip-variant
+    id: light_pwm
+    output: output_pwm
+    restore_mode: ALWAYS_OFF #RESTORE_DEFAULT_OFF
+    gamma_correct: 1.0 # to start brightness at 0.01 not at 0.18
+
+  - platform: monochromatic
+    name: "${friendly_name} Stred"
+    icon: mdi:led-strip-variant
+    id: light_pwm2
+    output: output_pwm2
+    restore_mode: ALWAYS_OFF #RESTORE_DEFAULT_OFF
+    gamma_correct: 1.0 # to start brightness at 0.01 not at 0.18
+
+  - platform: monochromatic
+    name: "${friendly_name} Dole"
+    icon: mdi:led-strip-variant
+    id: light_pwm3
+    output: output_pwm3
+    restore_mode: ALWAYS_OFF #RESTORE_DEFAULT_OFF
+    gamma_correct: 1.0 # to start brightness at 0.01 not at 0.18

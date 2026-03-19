@@ -1,0 +1,201 @@
+substitutions:
+  common_deviceSpecific_comment: "ld2420 v0.1"
+  ld2420_uart_tx: RX
+  ld2420_uart_rx: TX
+
+# CHANGES
+# v0.1 Pavol Holes 2025-01-06
+#   - initial version 
+
+# DOCUMENTATION
+# https://esphome.io/components/sensor/ld2420.html
+# https://esphome.io/components/uart#uart
+
+uart:
+  - id: uart_ld2420
+    tx_pin: ${ld2420_uart_tx}
+    rx_pin: ${ld2420_uart_rx}
+    baud_rate: 115200 # 256000
+    # parity: "NONE"
+    # stop_bits: 1
+
+ld2420:
+  uart_id: uart_ld2420
+
+text_sensor:
+  - platform: ld2420
+    fw_version:
+      name: LD2420 Firmware
+  - platform: template
+    id: ld2420_presence_gate
+    name: LD2420 Presence Gate
+    icon: mdi:math-log
+    # entity_category: config
+
+sensor:
+  - platform: ld2420
+    moving_distance:
+      name: LD2420 Moving Distance
+      on_value: 
+        then:
+          - lambda: |-
+              std::string vText = to_string((int)(x / 70));
+              id(ld2420_presence_gate).publish_state(vText);
+              // ESP_LOGI("ld2420", "[LD2420 Moving Distance] Presence changed to [%s]. Still energy: [%.0f]. Thresold: [%.0f]", id(ld2410_still_target_custom).state ? "ON" : "OFF", id(ld2410_still_energy).state, id(number_still_energy_threshold).state);
+
+binary_sensor:
+  - platform: ld2420
+    has_target:
+      name: LD2420 Presence
+      id: ld2420_presence
+
+select:
+  - platform: ld2420
+    operating_mode:
+      name: LD2420 Operating Mode
+
+number:
+  - platform: ld2420
+    presence_timeout:
+      name: Presence Timeout
+    min_gate_distance:
+      name: Detection Gate Minimum
+    max_gate_distance:
+      name: Detection Gate Maximum
+    gate_move_sensitivity:
+      name: Calibration Move Sensitivity Factor
+    gate_still_sensitivity:
+      name: Calibration Still Sensitivity Factor
+    # OPTION 1 BELOW: DYNAMIC GATE SELECT
+    # gate_select:
+    #   name: Select Gate to Set
+    # still_threshold:
+    #   name: Gate Detection Still Threshold
+    #   mode: slider
+    # move_threshold:
+    #   name: Set Gate Detection Move Threshold
+    #   mode: slider
+    # OPTION 2 BELOW: ALL GATES VISIBLE
+    gate_0:
+      move_threshold:
+        name: G00 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G00 Still Threshold
+        mode: slider
+    gate_1:
+      move_threshold:
+        name: G01 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G01 Still Threshold
+        mode: slider
+    gate_2:
+      move_threshold:
+        name: G02 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G02 Still Threshold
+        mode: slider
+    gate_3:
+      move_threshold:
+        name: G03 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G03 Still Threshold
+        mode: slider
+    gate_4:
+      move_threshold:
+        name: G04 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G04 Still Threshold
+        mode: slider
+    gate_5:
+      move_threshold:
+        name: G05 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G05 Still Threshold
+        mode: slider
+    gate_6:
+      move_threshold:
+        name: G06 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G06 Still Threshold
+        mode: slider
+    gate_7:
+      move_threshold:
+        name: G07 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G07 Still Threshold
+        mode: slider
+    gate_8:
+      move_threshold:
+        name: G08 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G08 Still Threshold
+        mode: slider
+    gate_9:
+      move_threshold:
+        name: G09 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G09 Still Threshold
+        mode: slider
+    gate_10:
+      move_threshold:
+        name: G10 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G10 Still Threshold
+        mode: slider
+    gate_11:
+      move_threshold:
+        name: G11 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G11 Still Threshold
+        mode: slider
+    gate_12:
+      move_threshold:
+        name: G12 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G12 Still Threshold
+        mode: slider
+    gate_13:
+      move_threshold:
+        name: G13 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G13 Still Threshold
+        mode: slider
+    gate_14:
+      move_threshold:
+        name: G14 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G14 Still Threshold
+        mode: slider
+    gate_15:
+      move_threshold:
+        name: G15 Move Threshold
+        mode: slider
+      still_threshold:
+        name: G15 Still Threshold
+        mode: slider
+
+button:
+  - platform: ld2420
+    apply_config:
+      name: LD2420 Apply Config
+    factory_reset:
+      name: LD2420 Factory Reset
+    restart_module:
+      name: LD2420 Restart Module
+    revert_config:
+      name: LD2420 Undo Edits

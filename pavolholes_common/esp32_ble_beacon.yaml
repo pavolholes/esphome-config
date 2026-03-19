@@ -1,0 +1,62 @@
+substitutions:
+  common_deviceSpecific_comment: "esp32_ble_beacon v0.3"
+
+# CHANGES
+# 0.3 2024-01-04
+#   - moved from Vitara to package so it can be reused
+#   - removed status_led
+# 0.2 2024-01-04
+#   - changed board from esp32 to esp32-c3-super-mini
+#   - removed include of "common" and select only few components
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  area: ${room}
+  comment: ${device_type} | ${common_deviceSpecific_comment} | Common disabled #${common_comment}
+  project:
+    name: ${project_name}
+    version: ${project_version}
+
+wifi:
+  fast_connect: true
+  ssid: !secret wifi_not_ssid
+  password: !secret wifi_not_password
+  # power_save_mode: none
+  # power_save_mode: HIGH # for ESP8266 LOW/HIGH are mixed up, esphome/issues/issues/1532
+  reboot_timeout: 1h
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  # ap:
+  #   ssid: AP
+  #   password: !secret wifi_not_password
+# captive_portal:
+  # Optional manual IP
+  # manual_ip:
+  #   static_ip: 192.168.2.146
+  #   gateway: 192.168.2.1
+  #   subnet: 255.255.255.0
+
+api:
+  reboot_timeout: 1h
+  encryption: 
+    key: !secret api_encryption_key
+
+ota:
+  password: !secret api_ota_password
+  safe_mode: true
+  reboot_timeout: 10min
+  num_attempts: 5
+
+logger:
+  level: INFO # VERY_VERBOSE # INFO # (default is DEBUG)
+
+status_led: !remove
+
+# https://esphome.io/components/esp32_ble_beacon.html
+esp32_ble_beacon:
+  type: iBeacon
+  uuid: ${esp32_ble_beacon_uuid}
+  # min_interval: 100ms # 20 to 10240; less than max_interval; default: 100ms
+  # max_interval: 100ms # 20 to 10240; default: 100ms
+  # measured_power: # RSSI of the iBeacon as measured 1 meter from the device; -128 to 0; default: -59
+  tx_power: 9 # The transmit power of the iBeacon in dBm. One of -12, -9, -6, -3, 0, 3, 6, 9. Defaults to 3dBm

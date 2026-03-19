@@ -1,0 +1,60 @@
+# CHANGES
+# 0.1 2025-05-29 Pavol
+#   - initial version
+
+substitutions:
+  device_name: pracovna-klima
+  friendly_name: Pracovna Klima
+  room: Pracovna
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.1"
+  device_type: ESP32 WROOM
+
+  # LG Klima
+  temperature_sensor_entity_id: sensor.pracovna_multisenzor_temperature
+
+  # I2C: BME280 (H&T&P), BH1750 (lux)
+  i2c_sda: GPIO22
+  i2c_scl: GPIO21
+
+  # UART: LD2410
+  # uart_ld2410_tx: GPIO17 # RX
+  # uart_ld2410_rx: GPIO16 # TX
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  common: !include pavolholes_common/common.yaml
+  esp32: !include pavolholes_common/esp32.yaml
+  debug: !include pavolholes_common/debug.yaml
+  syslog: !include pavolholes_common/syslog.yaml
+  # esp32BluetoothProxy: !include pavolholes_common/esp32BluetoothProxy.yaml # including this changes the framework so the first time it have to be loaded to ESP using USB cable, not OTA!
+  lg_airconditioner: !include pavolholes_common/lg_airconditioner.yaml
+  # bh1750: !include pavolholes_common/sensor/bh1750.yaml
+  # bme280: !include pavolholes_common/sensor/bme280.yaml
+  # ld2410: !include pavolholes_common/sensor/ld2410.yaml
+
+wifi:
+  manual_ip:
+    # Set this to the IP of the ESP
+    static_ip: 192.168.2.231
+    gateway: 192.168.2.1
+    subnet: 255.255.255.0
+
+# Troubleshooting
+# 2025-06-17 10:56 uploaded new firmware to ESPHome controller with Syslog
+# 2025-06-17 11:01 hard-reboot of the outdoor unit to reset the CH03 error on the indoor unit
+# 2025-06-17 11:04 Home Assistant: Set [Mode] to [Cool]
+# 2025-06-17 11:04 IR remote control: Push [Soft Air] button - can be seen in [climate] as [Fan Mode: Low]
+# 2025-06-17 11:08 IR remote control: Push [Temp Up] button (visible -2 on remote dislay)
+# 2025-06-17 11:09 IR remote control: Push [Temp Up] button (visible -1 on remote dislay)
+# 2025-06-17 11:10 IR remote control: Push [Temp Up] button (visible 0 on remote dislay)
+# 2025-06-17 11:11 IR remote control: Push [Mode] button (visible Auto mode on remote display) - can be seen in [climate] as [Mode: HEAT_COOL] and [Target Temperature: 22]
+# 2025-06-17 11:13 IR remote control: Push [Temp up] 4x button (visible 28 on remote display) - can be seen in [climate] as [Target Temperature: 23 then 26 then 28]
+# 2025-06-17 11:14 IR remote control: Push [Mode] button (visible Dry mode on remote display) - can be seen in [climate] as [Mode: DRY] and [Target Temperature: 27]
+# 2025-06-17 11:16 IR remote control: Push [Mode] button (visible Heat mode on remote display) - can be seen in [climate] as [Mode: HEAT] and [Target Temperature: 30]
+# 2025-06-17 11:16 IR remote control: Push [Mode] button (visible Fan mode on remote display) - can be seen in [climate] as [Mode: FAN_ONLY] and [Target Temperature: 30]
+# 2025-06-17 11:17 IR remote control: Push [Mode] button (visible Cool mode on remote display) - can be seen in [climate] as [Mode: FAN_ONLY] and [Target Temperature: 26]
+# 2025-06-17 11:17 IR remote control: Push [Temp up] button (visible 27 on remote display) - can be seen in [climate] as [Target Temperature: 27]
+# 2025-06-17 11:19 IR remote control: Push [Soft Air] button (visible So on remote display) - can be seen in [climate] as [Fan Mode: LOW]
+# 2025-06-17 14:05 IR remote control: Push [Soft Air] button (visible 27 on remote display) - can be seen in [climate] as [Target Temperature: 27]
+# 2025-06-17 14:05 IR remote control: Push [Temp Up] button (visible 28 on remote display) - can be seen in [climate] as [Target Temperature: 28]

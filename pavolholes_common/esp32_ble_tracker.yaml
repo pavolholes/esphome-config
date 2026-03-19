@@ -1,0 +1,147 @@
+substitutions:
+  common_deviceSpecific_comment: "ble_tracker v0.4"
+  
+# EXAMPLE USAGE OF THIS PACKAGE
+# packages:
+#   vitara: !include
+#     file: pavolholes_common/esp32_ble_tracker.yaml
+#     vars:
+#       ble_tracker_friendly_name: Vitara
+#       ble_tracker_name: vitara
+#       ble_tracker_MAC: 40:4C:CA:FB:EA:DA
+#   kalos: !include
+#     file: pavolholes_common/esp32_ble_tracker.yaml
+#     vars:
+#       ble_tracker_friendly_name: Kalos
+#       ble_tracker_name: kalos
+#       ble_tracker_MAC: 40:4C:CA:FB:E0:0E
+
+# CHANGES
+# 0.4 2024-01-18
+#   - changed from tracking one specific BLE device to generic package which accepts variables
+# 0.3
+#   - added "entity_category: config" to both "number"
+# 0.2
+#   - disabled esphome > platformio_options > build_flags > "-Wno-maybe-uninitialized"
+#   - changed BLE to track from MAC address to UUID
+# 0.1
+#   - initial version
+
+esp32:
+  framework:
+    type: esp-idf
+
+# logger:
+#   level: VERY_VERBOSE
+
+# text_sensor:
+#   - platform: ble_scanner
+#     name: "${friendly_name} BLE Devices Scanner"
+
+esp32_ble_tracker:
+  scan_parameters:
+    interval: 1100ms
+    window: 1100ms
+    active: false # We only listen for broadcasts
+  # source: https://esphome.io/components/esp32_ble_tracker.html#on-ble-advertise-trigger
+  # on_ble_advertise:
+  #   # - mac_address:
+  #   #   - ${ble_tracker_MAC}
+  #   then:
+  #     - lambda: |-
+  #         ESP_LOGD("ble_adv", "New BLE device");
+  #         ESP_LOGD("ble_adv", "  address: %s", x.address_str().c_str());
+  #         ESP_LOGD("ble_adv", "  name: %s", x.get_name().c_str());
+  #         ESP_LOGD("ble_adv", "  Advertised service UUIDs:");
+  #         for (auto uuid : x.get_service_uuids()) {
+  #             ESP_LOGD("ble_adv", "    - %s", uuid.to_string().c_str());
+  #         }
+  #         ESP_LOGD("ble_adv", "  Advertised service data:");
+  #         for (auto data : x.get_service_datas()) {
+  #             ESP_LOGD("ble_adv", "    - %s: (length %i)", data.uuid.to_string().c_str(), data.data.size());
+  #         }
+  #         ESP_LOGD("ble_adv", "  Advertised manufacturer data:");
+  #         for (auto data : x.get_manufacturer_datas()) {
+  #             ESP_LOGD("ble_adv", "    - %s: (length %i)", data.uuid.to_string().c_str(), data.data.size());
+  #         }
+
+sensor:
+  - platform: ble_rssi
+    id: sensor_ble_rssi_${ble_tracker_name}
+    mac_address: ${ble_tracker_MAC}
+    # ibeacon_uuid: ${ble_tracker_UUID}
+    # service_uuid: ${ble_tracker_UUID}
+    name: ${ble_tracker_friendly_name} RSSI
+    filters:
+      - exponential_moving_average:
+          alpha: 0.3
+          send_every: 1
+    on_value:
+      then:
+        - lambda: |-
+            if (id(sensor_ble_rssi_$ble_tracker_name).state > id(select_rssi_present_$ble_tracker_name).state) {
+              id(sensor_room_presence_debounce_$ble_tracker_name).publish_state(1);
+            } else if (id(sensor_ble_rssi_$ble_tracker_name).state < id(select_rssi_not_present_$ble_tracker_name).state) {
+              id(sensor_room_presence_debounce_$ble_tracker_name).publish_state(0);
+            }
+        - script.execute: script_presence_timeout_${ble_tracker_name}  # Publish 0 if no rssi received
+
+  - platform: template
+    id: sensor_room_presence_debounce_${ble_tracker_name}
+    filters:
+      - sliding_window_moving_average:
+          window_size: 3
+          send_every: 1
+
+number:
+  # Anything stronger than the value in 'select_rssi_present' is considered present. 
+  - platform: template
+    id: select_rssi_present_${ble_tracker_name}
+    name: ${ble_tracker_friendly_name} BLE RSSI Present
+    optimistic: true
+    mode: box
+    min_value: -100
+    max_value: -40
+    step: 1
+    restore_value: yes
+    initial_value: -77
+    unit_of_measurement: dBm
+    entity_category: config
+
+  # Anything below the value of 'select_rssi_not_present' means definitely not present.
+  - platform: template
+    id: select_rssi_not_present_${ble_tracker_name}
+    name: ${ble_tracker_friendly_name} BLE RSSI Not Present
+    optimistic: true
+    mode: box
+    min_value: -100
+    max_value: -40
+    step: 1
+    restore_value: yes
+    initial_value: -90
+    unit_of_measurement: dBm
+    entity_category: config
+
+binary_sensor:
+  - platform: template
+    id: room_presence_${ble_tracker_name}
+    name: ${ble_tracker_friendly_name} presence
+    device_class: occupancy
+    lambda: |-
+      if (id(sensor_room_presence_debounce_$ble_tracker_name).state > 0.99) {
+        return true;
+      } else if (id(sensor_room_presence_debounce_$ble_tracker_name).state < 0.01) {
+        return false;
+      } else {
+        return id(room_presence_$ble_tracker_name).state;
+      }
+
+script:
+  # Publish event every 30 seconds when no rssi received
+  - id: script_presence_timeout_${ble_tracker_name}
+    mode: restart
+    then:
+      - delay: 30s
+      - lambda: |-
+          id(sensor_room_presence_debounce_$ble_tracker_name).publish_state(0);
+      - script.execute: script_presence_timeout_${ble_tracker_name}

@@ -1,0 +1,23 @@
+# CHANGES
+# 0.3 2024-09-29 Pavol
+#   - renamed from [dvor-elektromer-test] to [dvor-elektromer]
+
+substitutions:
+  device_name: dvor-elektromer
+  friendly_name: Dvor Elektromer
+  room: Dvor
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.3"
+  device_type: ESP8266 D1mini
+
+  powermeter_iec62056_uart_rx: RX #TX
+  powermeter_iec62056_uart_tx: TX #RX
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  common: !include pavolholes_common/common.yaml
+  # debug: !include pavolholes_common/debug.yaml
+  esp8266: !include pavolholes_common/esp8266.yaml
+  web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
+  # powermeter_sml: !include pavolholes_common/sensor/powermeter_sml.yaml
+  powermeter_iec62056: !include pavolholes_common/sensor/powermeter_iec62056.yaml

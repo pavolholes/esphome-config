@@ -1,0 +1,95 @@
+# Documentation: https://esphome.io/cookbook/bme280_environment.html
+
+substitutions:
+  i2c_sda: GPIO21
+  i2c_scl: GPIO22
+  bme280_temperature_offset: "0"
+  
+i2c:
+  sda: ${i2c_sda}
+  scl: ${i2c_scl}
+
+sensor:
+  - platform: bme280_i2c
+    address: 0x76
+    update_interval: 60s
+    temperature:
+      name: Teplota
+      id: bme280_temperature
+      oversampling: 16x
+      filters:
+        - filter_out: nan
+        - offset: ${bme280_temperature_offset}
+        - lambda: "return x + id(temperature_offset_ui).state;"
+    pressure:
+      name: Tlak
+      id: bme280_pressure
+      filters:
+        - filter_out: nan
+    humidity:
+      name: Relativna Vlhkost
+      id: bme280_humidity
+      filters:
+        - filter_out: nan
+        - lambda: "return x + id(humidity_offset_ui).state;"
+
+  # - platform: template
+  #   name: Nadmorska vyska
+  #   lambda: |-
+  #     const float STANDARD_SEA_LEVEL_PRESSURE = 1013.25; //in hPa, see note
+  #     return ((id(bme280_temperature).state + 273.15) / 0.0065) *
+  #       (powf((STANDARD_SEA_LEVEL_PRESSURE / id(bme280_pressure).state), 0.190234) - 1); // in meter
+  #   update_interval: 60s
+  #   icon: 'mdi:signal'
+  #   unit_of_measurement: 'm'
+
+  - platform: absolute_humidity
+    name: Absolutna Vlhkost
+    temperature: bme280_temperature
+    humidity: bme280_humidity
+
+  - platform: template
+    name: Rosny Bod
+    lambda: |-
+      return (243.5*(log(id(bme280_humidity).state/100)+((17.67*id(bme280_temperature).state)/
+      (243.5+id(bme280_temperature).state)))/(17.67-log(id(bme280_humidity).state/100)-
+      ((17.67*id(bme280_temperature).state)/(243.5+id(bme280_temperature).state))));
+    unit_of_measurement: °C
+    icon: mdi:thermometer-alert
+
+number:
+  - platform: template
+    name: Teplota Offset
+    id: temperature_offset_ui
+    unit_of_measurement: °C
+    min_value: -20
+    max_value: 20
+    step: 0.1
+    mode: box
+    update_interval: never
+    optimistic: true
+    restore_value: true
+    initial_value: 0
+    icon: mdi:thermometer
+    entity_category: config
+    # on_value:
+      # - component.update: bme280_temperature
+      # - lambda: 'id(bme280_temperature).update();'
+
+  - platform: template
+    name: Vlhkost Offset
+    id: humidity_offset_ui
+    unit_of_measurement: "%"
+    min_value: -50
+    max_value: 50
+    step: 0.1
+    mode: box
+    update_interval: never
+    optimistic: true
+    restore_value: true
+    initial_value: 0
+    icon: mdi:water-percent
+    entity_category: config
+    # on_value:
+      # - component.update: bme280_humidity
+      # - lambda: 'id(bme280_humidity).update();'

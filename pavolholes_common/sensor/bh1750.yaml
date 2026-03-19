@@ -1,0 +1,17 @@
+# Documentation: https://esphome.io/components/sensor/bh1750.html
+
+substitutions:
+  i2c_sda: GPIO21
+  i2c_scl: GPIO22
+  
+i2c:
+  sda: ${i2c_sda}
+  scl: ${i2c_scl}
+
+sensor:
+  - platform: bh1750
+    id: illuminance_sensor
+    name: Illuminance
+    # address: 0x23 # default: 0x23
+    # update_interval: 60s # default: 60s
+

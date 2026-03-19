@@ -1,0 +1,7 @@
+# Reports how long the device has been powered (in seconds) since last reboot
+platform: uptime
+id: sensor_uptime
+name: "Uptime Seconds"
+unit_of_measurement: s
+icon: mdi:clock-outline
+update_interval: 60s

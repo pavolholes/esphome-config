@@ -1,0 +1,138 @@
+# USAGE
+#   binary_sensor:
+#     - platform: gpio
+#       on_multi_click: !include { file: binary_sensor/gpio_button_multiclick.yaml, vars: { light_id: light_dimmer } }
+# where "light_id" is "id" of the "light" managed by this button
+#
+# Button has three actions:
+#   - Single Short Click - toggle light on/off; set brightness according the sun position and day time.
+#   - Single Long Click - while holding the button the brightness is changed; when released the brightness change stops.
+#   - Double Short Click - quick action for brightness - loop through light_nightBrightnessLevel and 100%.
+
+# --- Double short click begin
+- timing:
+    - ON for at most 0.5s #0.5
+    - OFF for at most 0.5s #0.5
+    - ON for at most 0.5s #0.5
+    - OFF for at least 0.2s #0.2
+  then:
+    - logger.log:
+        format: "[${friendly_name} Button] Double Short Clicked"
+        level: INFO
+    - light.turn_on:
+        id: ${light_id}
+        transition_length: 2s
+        brightness: !lambda |-
+          float currentBrightness = id(${light_id})->current_values.get_brightness();
+          float nightBrightness = ${light_nightBrightnessLevel};
+          float eveningBrightness = ${light_eveningBrightnessLevel};
+          float maxBrightness = 1.0;
+
+          if (currentBrightness != maxBrightness) {
+            ESP_LOGI("main", "[${friendly_name} Button Double Short Clicked] Current brightness is [%.2f] which is not equal to [%.2f]. Setting brightness to [%.2f].", currentBrightness, maxBrightness, maxBrightness);
+            return maxBrightness;
+          } else {
+            ESP_LOGI("main", "[${friendly_name} Button Double Short Clicked] Current brightness is [%.2f] which equal to [%.2f]. Setting brightness to [%.2f].", currentBrightness, maxBrightness, nightBrightness);
+            return nightBrightness;
+          }
+
+          // BELOW is to cycle brigthness anything > evening > night > evening > max > evening > night ...
+          // static bool fadeUp = true;
+          // if (currentBrightness != eveningBrightness) {
+          //     ESP_LOGI("main", "[${friendly_name} Button Double Short Clicked] Current brightness is [%.2f] which is not equal to [%.2f]. Setting brightness to [%.2f].", currentBrightness, eveningBrightness, eveningBrightness);
+          //     if (currentBrightness < eveningBrightness) fadeUp = true;
+          //     else fadeUp = false;
+          //     return eveningBrightness;
+          //   }
+          // else {
+          //   if (fadeUp) {
+          //     ESP_LOGI("main", "[${friendly_name} Button Double Short Clicked] Current brightness is [%.2f] which is equal to [%.2f]. Direction is set to [up], so setting brightness to [%.2f].", currentBrightness, eveningBrightness, maxBrightness);
+          //     fadeUp = false;
+          //     return maxBrightness;
+          //   } else {
+          //     ESP_LOGI("main", "[${friendly_name} Button Double Short Clicked] Current brightness is [%.2f] which is equal to [%.2f]. Direction is set to [down]. Setting brightness to [%.2f].", currentBrightness, eveningBrightness, nightBrightness);
+          //     fadeUp = true;
+          //     return nightBrightness;
+          //   }
+          // }
+# --- Double short click end
+# --- Single long click begin
+- timing:
+    - ON for at least 1s #1s
+  then:
+    - logger.log:
+        format: "[${friendly_name} Button] Single Long Clicked"
+        level: INFO
+    # While button is pressed, keep changing the brightness.
+    - while:
+        condition:
+          binary_sensor.is_on: wall_button
+        then:
+          - logger.log:
+              format: "[${friendly_name} Button] [Single Long Clicked] fading brightness..."
+              level: INFO
+          - light.dim_relative:
+              id: ${light_id}
+              relative_brightness: !lambda |-
+                float currentBrightness = id(${light_id})->current_values.get_brightness();
+                float nightBrightness = ${light_nightBrightnessLevel};
+                float fadingStep = ${light_fadingStep};
+                float maxBrightness = 1.0;
+                static bool fadeUp = true;
+                if (currentBrightness + fadingStep > maxBrightness) fadeUp = false;
+                if (currentBrightness - fadingStep < nightBrightness) fadeUp = true;  
+                
+                if (fadeUp) return +fadingStep;
+                else return -fadingStep;
+              transition_length: 0.1s
+          - delay: 0.3s # Make brightness change slower so human can stop it.
+# --- Single long click end
+# --- Single short click begin
+- timing:
+    - ON for at most 0.5s #0.5
+    - OFF for at least 0.5s #0.5
+  then:
+    - logger.log:
+        format: "[${friendly_name} Button] Single Short Clicked"
+        level: INFO
+    - if:
+        condition:
+          - light.is_on: ${light_id}
+        then:
+          - logger.log:
+              format: "[${friendly_name} Button Single Short Clicked] Light is on, so turn it off."
+              level: INFO
+          - light.turn_off: ${light_id}
+        else:
+          - logger.log:
+              format: "[${friendly_name} Button Single Short Clicked] Light is off, so turn it on..."
+              level: INFO
+          - if:
+              condition:
+                - sun.is_above_horizon:
+              then:
+                - logger.log:
+                    format: "[${friendly_name} Button Single Short Clicked] ... and sun is above horizon, setting brightness to 1.00."
+                    level: INFO
+                - light.turn_on:
+                    id: ${light_id}
+                    brightness: 1.0                   
+              else:
+                - logger.log:
+                    format: "[${friendly_name} Button Single Short Clicked] ... and sun is below horizon..."
+                    level: INFO
+                - light.turn_on:
+                    id: ${light_id}
+                    brightness: !lambda |-
+                      if (id(sntp_time).now().hour == 19) {
+                        ESP_LOGI("main", "[${friendly_name} Button Single Short Clicked] ... and it's between 19:00:00 and 19:59:59, setting brightness to ${light_eveningBrightnessLevel}.");
+                        return ${light_eveningBrightnessLevel};
+                      } else if (id(sntp_time).now().hour < 7 || id(sntp_time).now().hour >= 20) {
+                        ESP_LOGI("main", "[${friendly_name} Button Single Short Clicked] ... and it's less then 7:00:00 or more than 19:59:59 setting brightness to ${light_nightBrightnessLevel}.");
+                        return ${light_nightBrightnessLevel};
+                      } else {
+                        ESP_LOGI("main", "[${friendly_name} Button Single Short Clicked] ... and no specific time condition was met, setting brightness to 1.00.");
+                        return 1.00;
+                      }
+# --- Single short click end
+

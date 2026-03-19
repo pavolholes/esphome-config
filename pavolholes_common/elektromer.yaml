@@ -1,0 +1,75 @@
+substitutions:
+  common_deviceSpecific_comment: "elektromer v0.2"
+
+# CHANGES
+# v0.2
+#   - removed button_reset_total
+# v0.1
+#   - initial version 
+
+# DOCUMENTATION
+# https://github.com/klaasnicolaas/home-assistant-glow/blob/dev/home_assistant_glow.yaml
+
+sensor:
+  - platform: pulse_meter
+    name: Elektromer Power Consumption
+    id: sensor_energy_pulse_meter
+    unit_of_measurement: 'W'
+    state_class: measurement
+    device_class: power
+    icon: mdi:flash-outline
+    accuracy_decimals: 0
+    # pin: ${elektromer_pulsemeter_pin}
+      # https://community.home-assistant.io/t/help-esphome-esp32-lm393-optical-sensor-power-spikes-led-pulse-meter/522421/4?u=palito
+    pin:
+      number: ${elektromer_pulsemeter_pin}
+      mode:
+        input: true
+        pullup: true
+    # https://community.home-assistant.io/t/utility-meter-false-reading-spikes/141354/2?u=palito
+    # For S0 pulse meters that are used to meter power consumption 50-100 ms is a reasonable value. Source: https://esphome.io/components/sensor/pulse_meter.html#configuration-variables
+    internal_filter: 100ms
+    # internal_filter: 100ms
+    # on_value:
+    #   then:
+    #     - light.turn_on:
+    #         id: light_status
+    #     - delay: 0.5s
+    #     - light.turn_off:
+    #         id: light_status
+    filters:
+      - filter_out: nan
+      - clamp:
+          max_value: 14000 # P = U*I*3f = 240V * 20A * 3f = 14400W (20A is 3 phase house fuse)  
+      - filter_out: 14000
+      # multiply value = (60 / imp value) * 1000
+      # - multiply: 60
+      - lambda: return x * ((60.0 / 1000) * 1000.0);
+    total:
+      name: Elektromer Total Energy
+      id: sensor_total_energy
+      unit_of_measurement: 'kWh'
+      icon: mdi:circle-slice-3
+      state_class: total_increasing
+      device_class: energy
+      accuracy_decimals: 3
+      filters:
+        - filter_out: nan
+        # multiply value = 1 / imp value
+        # - multiply: 0.001
+        - lambda: return x * (1.0 / 1000);
+
+  # Total day usage
+  - platform: total_daily_energy
+    name: Elektromer Daily Energy
+    id: sensor_total_daily_energy
+    power_id: sensor_energy_pulse_meter
+    unit_of_measurement: 'kWh'
+    icon: mdi:circle-slice-3
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 3
+    filters:
+      - filter_out: nan
+      # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001

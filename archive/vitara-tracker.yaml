@@ -1,0 +1,75 @@
+substitutions:
+  device_name: vitara-tracker
+  friendly_name: Vitara Tracker
+  room: Dvor
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.1"
+  device_type: ESP32 WROOM-32
+
+  esp32_ble_beacon_uuid: df5ba1f6-d5b3-5842-4f29-b414fd207e15
+
+# CHANGES
+# 0.2 2024-01-04
+#   - changed board from esp32 to esp32-c3-super-mini
+#   - removed include of "common" and select only few components
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  # area: ${room}
+  comment: ${device_type} # | ${common_deviceSpecific_comment} | Common disabled #${common_comment}
+  project:
+    name: ${project_name}
+    version: ${project_version}
+
+esp32:
+  board: nodemcu-32s
+  framework: 
+    type: esp-idf
+
+status_led:
+  pin:
+    number: GPIO2 #GPIO33
+
+wifi:
+  fast_connect: true
+  ssid: !secret wifi_not_ssid
+  password: !secret wifi_not_password
+  # power_save_mode: none
+  # power_save_mode: HIGH # for ESP8266 LOW/HIGH are mixed up, esphome/issues/issues/1532
+  reboot_timeout: 1h
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  # ap:
+  #   ssid: AP
+  #   password: !secret wifi_not_password
+# captive_portal:
+  # Optional manual IP
+  # manual_ip:
+  #   static_ip: 192.168.2.146
+  #   gateway: 192.168.2.1
+  #   subnet: 255.255.255.0
+
+api:
+  reboot_timeout: 1h
+  encryption: 
+    key: !secret api_encryption_key
+
+ota:
+  password: !secret api_ota_password
+  safe_mode: true
+  reboot_timeout: 10min
+  num_attempts: 5
+
+logger:
+  level: INFO # INFO # (default is DEBUG)
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  # web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
+  # ble_tracker: !include pavolholes_common/ble_tracker.yaml
+  # esp32_ble_beacon: !include pavolholes_common/esp32_ble_beacon.yaml
+  # esp32-c3-super-min: !include pavolholes_common/esp32-c3-super-mini.yaml
+  ble_tracker_brana: !include pavolholes_common/ble_tracker_brana.yaml
+  esp32: !include pavolholes_common/esp32.yaml
+  common: !include pavolholes_common/common.yaml
+

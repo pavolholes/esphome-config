@@ -1,0 +1,28 @@
+substitutions:
+  device_name: kalos
+  friendly_name: Kalos
+  room: Dvor
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.3"
+  device_type: ESP32-C3-super-mini
+
+  esp32_ble_beacon_uuid: 3fa79a7e-58a9-c179-ad00-0642ae02234f
+
+# WIFI: 40:4C:CA:FB:E0:0C | Bluetooth: 40:4c:ca:fb:e0:0e
+
+# CHANGES
+# 0.3 2024-01-18
+#   - moved config to package so it can be reused
+# 0.2 2024-01-04
+#   - changed board from esp32 to esp32-c3-super-mini
+#   - removed include of "common" and select only few components
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  # common: !include pavolholes_common/common.yaml
+  # debug: !include pavolholes_common/debug.yaml
+  # esp32: !include pavolholes_common/esp32.yaml
+  esp32-c3-super-mini: !include pavolholes_common/esp32-c3-super-mini.yaml
+  # web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
+  # ble_tracker: !include pavolholes_common/ble_tracker.yaml
+  esp32_ble_beacon: !include pavolholes_common/esp32_ble_beacon.yaml

@@ -1,0 +1,25 @@
+substitutions:
+  common_deviceSpecific_comment: "Liquid Contactless v0.1"
+  liquid_contactless_sensor_pin: GPIO6
+  liquid_contactless_sensor_pullup: INPUT_PULLUP
+  liquid_contactless_sensor_inverted: "True"
+
+# CHANGES
+# v0.1 2024-01-32
+#   - initial version 
+
+# DOCUMENTATION
+# https://community.home-assistant.io/t/water-level-sensor-xkc-y25-npn-sends-wet-dry-wet-dry-ten-times-per-seconds/425036
+# https://peyanski.com/contactless-liquid-sensor-home-assistant-and-xkc-y25/
+
+binary_sensor:
+  - platform: gpio
+    name: Liquid Sensor
+    device_class: moisture
+    pin:
+      number: ${liquid_contactless_sensor_pin}
+      # Pullup means it's switching ground (that's why it's inverted as well).
+      mode: ${liquid_contactless_sensor_pullup}
+      inverted: ${liquid_contactless_sensor_inverted}
+    filters:
+      - delayed_on_off: 30ms

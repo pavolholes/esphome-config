@@ -1,0 +1,23 @@
+substitutions:
+  common_deviceSpecific_comment: "ble_proxy v0.2"
+
+# CHANGES
+# v0.2
+#   - changed esp32_ble_tracker > scan_parameters > active from false to true
+#   - commented esp32_ble_tracker > scan_parameters > interval
+#   - commented esp32_ble_tracker > scan_parameters > window
+# v0.1
+#   - initial version
+
+esp32:
+  framework:
+    type: esp-idf
+
+bluetooth_proxy:
+  active: True
+
+esp32_ble_tracker:
+  scan_parameters:
+    # interval: 1100ms
+    # window: 1100ms
+    active: True # active to send the BLE proxy node name to HA

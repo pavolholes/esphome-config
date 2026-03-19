@@ -1,0 +1,7 @@
+# Enable Web Server
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret api_ota_password
+  local: true

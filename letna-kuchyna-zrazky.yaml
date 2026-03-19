@@ -1,0 +1,25 @@
+substitutions:
+  device_name: letna-kuchyna-zrazky
+  friendly_name: Letna Kuchyna Merac Zrazok
+  room: Letna Kuchyna
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.4"
+  device_type: ESP8266 D1mini
+  i2c_sda: D2
+  i2c_scl: D1
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  common: !include pavolholes_common/common.yaml
+  esp8266: !include pavolholes_common/esp8266.yaml
+  # debug: !include pavolholes_common/debug.yaml
+  web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
+  bme_280: !include pavolholes_common/sensor/bme280.yaml
+
+binary_sensor:
+  - platform: gpio
+    name: Senzor Kvapiek
+    pin:
+      number: D7
+      inverted: true
+      mode: INPUT_PULLUP

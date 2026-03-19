@@ -1,0 +1,141 @@
+substitutions:
+  device_name: esp32cam
+  friendly_name: ESP32CAM
+
+esphome:
+  name: "${device_name}"
+  platform: ESP32
+  board: esp32dev
+
+wifi:
+  ssid: !secret wifi_not_ssid
+  password: !secret wifi_not_password
+  power_save_mode: none
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "${friendly_name} AP"
+    password: !secret wifi_not_password
+
+status_led:
+  pin:
+    number: GPIO33
+    inverted: True
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_ota_password
+
+ota:
+  password: !secret api_ota_password
+
+time:
+  # Sync RTC time with HA
+  - platform: homeassistant
+    id: homeassistant_time
+
+sun:
+  latitude: !secret latitude
+  longitude: !secret longitude
+
+esp32_camera:
+  name: "${friendly_name} Camera"
+  external_clock:
+    pin: GPIO0
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO26
+    scl: GPIO27
+  data_pins: [GPIO5, GPIO18, GPIO19, GPIO21, GPIO36, GPIO39, GPIO34, GPIO35]
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+  power_down_pin: GPIO32
+  resolution: 800x600 #Higher resolutions require more memory, if there’s not enough memory you will see an error during startup. Default: 640x480
+  jpeg_quality: 10 #From 10 to 63. Default: 10 (lowest compression).
+  max_framerate: 5 fps
+  vertical_flip: false
+  horizontal_mirror: false
+
+esp32_camera_web_server:
+  - port: 8080
+    mode: stream
+  
+# Enable output with GPIO output of the ESP32 for the monochromatic light. Do not use LEDC PWM!
+output:
+  - platform: gpio
+    pin: GPIO4
+    #frequency: 1000 Hz
+    id: 'outputLight'
+
+# Create monochromatic light which will maintain output defined above.
+light:
+  - platform: binary
+    id: 'LedLight'
+    name: '${friendly_name} Light'    
+    output: outputLight
+    #default_transition_length: 1s
+
+sensor:
+  - platform: wifi_signal
+    name: "${friendly_name} WiFi Signal"
+    update_interval: 60s
+
+  # Reports how long the device has been powered (in hours) since last reboot
+  - platform: uptime
+    id: sensor_uptime
+    name: "${friendly_name} Uptime Seconds"
+    icon: mdi:clock-outline
+    update_interval: 60s
+
+  - platform: uptime
+    name: "${friendly_name} Uptime Sensor"
+    id: uptime_sensor
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? to_string(days) + "d " : "") +
+                (hours ? to_string(hours) + "h " : "") +
+                (minutes ? to_string(minutes) + "m " : "") +
+                (to_string(seconds) + "s")
+              ).c_str();
+
+text_sensor:
+  # Sensor with esphome version and fw build time
+  - platform: version
+    name: "${friendly_name} Version"
+  
+  # Extra wifi info from device
+  - platform: wifi_info
+    ip_address:
+      name: "${friendly_name} IP"
+    ssid:
+      name: "${friendly_name} SSID"
+    bssid:
+      name: "${friendly_name} BSSID"
+
+  # Uptime text sensor which is updated by the sensor id: uptime_sensor
+  - platform: template
+    name: "${friendly_name} Uptime"
+    id: uptime_human
+    icon: mdi:clock-start
+
+button:
+  - platform: restart
+    name: "${friendly_name} Restart"

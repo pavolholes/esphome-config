@@ -1,0 +1,22 @@
+substitutions:
+  device_name: hostovska-led
+  friendly_name: Hostovska LED
+  room: Hostovska
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.4"
+  device_type: Shelly RGBW2
+  pwm_pin: GPIO04
+  button_pin: GPIO5
+  button_pullup: input
+  button_inverted: "False"
+  light_nightBrightnessLevel: "0.20"
+  light_eveningBrightnessLevel: "0.50"
+  light_fadingStep: "0.05"
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  common: !include pavolholes_common/common.yaml
+  # debug: !include pavolholes_common/debug.yaml
+  web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
+  shellyRGBW2: !include pavolholes_common/shellyRGBW2.yaml
+  gpio_button: !include pavolholes_common/binary_sensor/gpio_button.yaml

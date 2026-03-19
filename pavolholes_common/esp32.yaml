@@ -1,0 +1,17 @@
+substitutions:
+  common_deviceSpecific_comment: "ESP32 v0.4"
+
+esp32:
+  board: nodemcu-32s
+  framework: 
+    type: esp-idf
+
+status_led:
+  pin:
+    number: GPIO2 #GPIO33
+    ignore_strapping_warning: True
+    #inverted: True
+
+sensor:
+  - platform: internal_temperature
+    name: Internal Temperature

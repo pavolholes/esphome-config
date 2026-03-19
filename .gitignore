@@ -1,0 +1,15 @@
+# Gitignore settings for ESPHome
+
+# ingore below from root
+/.esphome/
+/secrets.yaml
+/workspace
+/fonts
+/.ssh/
+
+# ignore below anywhere deeper in the subfolders
+**/.pioenvs/
+**/.piolibdeps/
+**/lib/
+**/src/
+**/platformio.ini

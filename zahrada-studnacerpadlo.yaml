@@ -1,0 +1,19 @@
+substitutions:
+  device_name: zahrada-studnacerpadlo
+  friendly_name: Zahrada StudnaCerpadlo
+  room: Zahrada
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.1"
+  device_type: Shelly 2.5
+  max_power: "7000.0" # watt
+  max_temp: "90.0" # °C
+
+  channel1_name: Studna
+  channel2_name: Cerpadlo
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  common: !include pavolholes_common/common.yaml
+  # debug: !include pavolholes_common/debug.yaml
+  web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
+  shelly2_5: !include pavolholes_common/shelly2_5.yaml

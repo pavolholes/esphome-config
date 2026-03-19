@@ -1,0 +1,253 @@
+substitutions:
+  common_deviceSpecific_comment: "powermeter_iec62056 v0.5"
+  powermeter_iec62056_uart_rx: RX
+  powermeter_iec62056_uart_tx: TX
+
+# CHANGES
+# v0.5 2024-09-29 Pavol
+#   - renamed sensors to Slovak (English kept in comments)
+#   - removed sensor for Maximum power demand
+#   - added Timestamp text sensor for combined date and time
+#   - hidden Date and Time text sensors
+# v0.4 2024-03-07 Michal
+#   - added calculations of Wattage and total daily energy
+# v0.3 2024-04-01 Pavol
+#   - "uart > baud_rate" changed to 300
+#   - "iec62056" > "baud_rate_max" changed from 9600 to 19200
+# v0.2 2024-02-27 Pavol
+#   - "uart > baud_rate" changed from 2400 to default 9600
+#   - "iec62056 > mode_d: True" commented
+#   - "iec62056" added "update_interval: 60s" and "baud_rate_max: 9600" and "battery_meter: False"
+# v0.1 2024-02-16 Pavol
+#   - initial version
+#
+# DOCUMENTATION
+# https://aquaticus.info/iec62056.html
+# https://esphome.io/components/uart#uart
+#
+# For a list of OBIS codes for electric meters, you can visit:
+#   https://www.promotic.eu/en/pmdoc/Subsystems/Comm/PmDrivers/IEC62056_OBIS.htm
+#   https://onemeter.com/docs/device/obis/#index
+#
+# TTL To IR Converter from Aliexpress has receiver diode on the right side while cable pointing to the ground
+
+logger:
+  baud_rate: 0 # disable logging to serial console because serial port (UART) is used to communicate with powermeter
+  # uncoment below line for debugging
+  level: DEBUG
+  logs:
+    iec62056: DEBUG # [10:50:12][D][iec62056.component:416]: Data: '1-0:15.8.1(00000009999.567*kWh)'
+    uart: DEBUG
+    uart.debug: DEBUG
+
+external_components:
+  # IEC62056 component
+  - source: github://aquaticus/esphome-iec62056
+
+uart:
+  # For ESP8266 it is highly recommended to use hardware UART. Software UART cannot handle transmissions faster than 4800 bps.
+  rx_pin: ${powermeter_iec62056_uart_rx}
+  tx_pin: ${powermeter_iec62056_uart_tx}
+  baud_rate: 300
+  data_bits: 7
+  parity: EVEN
+  stop_bits: 1
+  rx_buffer_size: 1024
+  # PRIDAŤ debug pre sledovanie UART komunikácie
+  debug:
+    direction: BOTH
+    dummy_receiver: false
+    sequence:
+      - lambda: |-
+          std::string hex_data = format_hex_pretty((uint8_t*)bytes.data(), bytes.size());
+          ESP_LOGI("uart.debug", "Direction: %s, Bytes: %d, Data: %s", 
+                    direction == UART_DIRECTION_RX ? "RX" : "TX",
+                    bytes.size(), hex_data.c_str());
+
+# Configuration entry for bidirectional communication
+iec62056:
+  update_interval: 60s
+  baud_rate_max : 19200
+  battery_meter: False
+
+binary_sensor:
+  - platform: iec62056
+    id: meter_status
+    name: Meter Transmission Status
+
+text_sensor:
+  # Category: Metadata
+  - platform: iec62056
+    obis: 0.9.2
+    group: 1
+    name: Meter Date Internal
+    id: meter_date_internal
+    internal: True
+    on_value:
+      lambda: |-
+        ESP_LOGD("iec62056.component", "meter_date_internal: [%s]", x.c_str()); // 0240229 = 2024-02-29
+        std::string year = x.substr(1,2);
+        std::string month = x.substr(3,2);
+        std::string day = x.substr(5,2);
+        std::string date_str = "20" + year + "-" + month + "-" + day;
+        ESP_LOGD("iec62056.component", "Converted Meter Date [%s]", date_str.c_str());
+        id(meter_date).publish_state(date_str);
+
+  - platform: template
+    name: Meter Date
+    id: meter_date
+    internal: True
+    # device_class: timestamp
+    icon: mdi:calendar-today
+
+  - platform: iec62056
+    obis: 0.9.1
+    group: 1
+    name: Meter Time Internal
+    id: meter_time_internal
+    internal: True
+    on_value:
+      - lambda: |-
+          ESP_LOGD("iec62056.component", "meter_time_internal: [%s]", x.c_str()); // 0213320 = 21:33:20
+          std::string hour = x.substr(1,2);
+          std::string minute = x.substr(3,2);
+          std::string second = x.substr(5,2);
+          std::string time_str = hour + ":" + minute + ":" + second;
+          ESP_LOGD("iec62056.component", "Converted Meter Time [%s]", time_str.c_str());
+          id(meter_time).publish_state(time_str);
+
+  - platform: template
+    name: Meter Time
+    id: meter_time
+    internal: True
+    # device_class: timestamp
+    icon: mdi:clock
+
+  - platform: template
+    name: Posledna aktualizacia # Meter Timestamp
+    id: meter_datetime
+    # device_class: timestamp
+    icon: mdi:clock
+    lambda: |-
+      // std::string datetime_str;
+      if (id(meter_date).state.length() != 0 && id(meter_time).state.length() != 0) {
+        // std::string datetime_str = id(meter_date).state + "T" + id(meter_time).state + "+00:00";
+        std::string datetime_str = id(meter_date).state + " " + id(meter_time).state;
+        ESP_LOGI("iec62056.component", "Converted Meter DateTime [%s]", datetime_str.c_str());
+        return datetime_str;
+      } else {
+        return {};
+      };
+
+sensor:
+  # Category: Active Energy
+  - platform: iec62056
+    obis: 1.8.0
+    name: Elektromer Celkova Spotreba # Positive active energy total
+    unit_of_measurement: kWh
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 0
+
+  # Category: Network parameters
+  - platform: iec62056
+    name: Prud L1 # Instantaneous current in phase L1
+    id: current_L1
+    obis: 31.7.0
+    unit_of_measurement: A
+    state_class: measurement
+    device_class: current
+    accuracy_decimals: 2
+
+  - platform: iec62056
+    name: Prud L2 # Instantaneous current in phase L2
+    id: current_L2
+    obis: 51.7.0
+    unit_of_measurement: A
+    state_class: measurement
+    device_class: current
+    accuracy_decimals: 2
+
+  - platform: iec62056
+    name: Prud L3 # Instantaneous current in phase L3
+    id: current_L3
+    obis: 71.7.0
+    unit_of_measurement: A
+    state_class: measurement
+    device_class: current
+    accuracy_decimals: 2
+
+  - platform: iec62056
+    name: Napatie L1 # Instantaneous voltage in phase L1
+    id: voltage_L1
+    obis: 32.7.0
+    unit_of_measurement: V
+    state_class: measurement
+    device_class: voltage
+    accuracy_decimals: 1
+
+  - platform: iec62056
+    name: Napatie L2 # Instantaneous voltage in phase L2
+    id: voltage_L2
+    obis: 52.7.0
+    unit_of_measurement: V
+    state_class: measurement
+    device_class: voltage
+    accuracy_decimals: 1
+
+  - platform: iec62056
+    name: Napatie L3 # Instantaneous voltage in phase L3
+    id: voltage_L3
+    obis: 72.7.0
+    unit_of_measurement: V
+    state_class: measurement
+    device_class: voltage
+    accuracy_decimals: 1
+
+  # Calculations
+  - platform: template
+    name: Vykon L1 # Power in phase L1
+    id: wattage_L1
+    lambda: return id(current_L1).state * id(voltage_L1).state;
+    unit_of_measurement: W
+    state_class: measurement
+    device_class: power
+    accuracy_decimals: 0
+
+  - platform: template
+    name: Vykon L2 # Power in phase L2
+    id: wattage_L2
+    lambda: return id(current_L2).state * id(voltage_L2).state;
+    unit_of_measurement: W
+    state_class: measurement
+    device_class: power
+    accuracy_decimals: 0
+
+  - platform: template
+    name: Vykon L3 # Power in phase L3
+    id: wattage_L3
+    lambda: return id(current_L3).state * id(voltage_L3).state;
+    unit_of_measurement: W
+    state_class: measurement
+    device_class: power
+    accuracy_decimals: 0
+
+  - platform: template
+    name: Vykon total # Power total
+    id: wattage_total
+    lambda: return id(wattage_L1).state + id(wattage_L2).state + id(wattage_L3).state;
+    unit_of_measurement: W
+    state_class: measurement
+    device_class: power
+    accuracy_decimals: 0
+
+  - platform: total_daily_energy
+    name: Elektromer Celkova Denna Spotreba # Total Daily Energy
+    power_id: wattage_total
+    unit_of_measurement: 'kWh'
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 3
+    filters:
+      # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001

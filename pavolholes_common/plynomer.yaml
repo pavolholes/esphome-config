@@ -1,0 +1,160 @@
+substitutions:
+  common_deviceSpecific_comment: "plynomer v0.4"
+
+# CHANGES
+# v0.4
+#   - reworked from scratch to use the GPIO sensor for the Total sensor and pulse_counter
+#     only for consumption per minute and hour and daily
+#   - added again number sensor for "impulse rate"
+#   - added new number sensor and button for setting Total value to specified
+#     value (preferably real value from the gas meter) which will persist the reboot also
+# v0.3
+#   - changed from "pulse_meter" to "pulse_counter"
+# v0.2
+#   - initial version was not finished
+# v0.1
+#   - initial version 
+
+# DECOUMENTATION:
+# https://github.com/klaasnicolaas/home-assistant-glow/blob/dev/home_assistant_glow.yaml#L171
+# https://esphome.io/components/sensor/pulse_counter.html#pulse-counter-sensor
+# https://esphome.io/cookbook/power_meter
+# https://community.home-assistant.io/t/track-a-gas-meter-with-esphome/162669/27
+
+
+globals:
+  - id: gas_total_impulses
+    type: int
+    initial_value: '0'
+    restore_value: true
+
+binary_sensor:
+  - platform: gpio
+    name: Plynomer Gas Binary Sensor Internal
+    id: gas_binary_sensor_internal
+    internal: false
+    pin:
+      number: ${plynomer_pulsemeter_pin}
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+      allow_other_uses: true
+    filters:
+      - delayed_on: 100ms
+    on_press:
+      then:
+        - lambda: id(gas_total_impulses) += 1;
+        - logger.log:
+            format: "[Plynomer] Gas Pulse Detected. Total pulses: [%i]"
+            args: id(gas_total_impulses)
+            level: INFO
+
+sensor:
+  - platform: template
+    name: Plynomer Gas Total
+    id: sensor_gas_total
+    unit_of_measurement: 'm³'
+    icon: mdi:fire
+    state_class: total_increasing
+    device_class: gas
+    accuracy_decimals: 2
+    lambda: |-
+      return id(gas_total_impulses) * (1.0 / id(number_gas_pulse_rate).state);
+    on_value:
+      then:
+        - logger.log:
+            format: "[Plynomer] Gas Total: [%.2f]"
+            args: x
+            level: INFO
+
+  - platform: pulse_counter
+    name: Plynomer Gas Consumption m3/min
+    id: sensor_gas_pulse_counter
+    unit_of_measurement: 'm³/min'
+    state_class: measurement
+    device_class: gas
+    icon: mdi:fire
+    internal: false
+    accuracy_decimals: 3
+    update_interval: 60s
+    pin:
+      number: ${plynomer_pulsemeter_pin}
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+      allow_other_uses: true
+    use_pcnt: true # use hardware pulse counter (but internal_filter can be max 13us)
+    count_mode:
+      rising_edge: DISABLE
+      falling_edge: INCREMENT
+      # internal_filter: 2s #100ms
+    filters:
+      - filter_out: nan
+      - debounce: 1.5s
+      # pulse_counter defaults to impulses per minute
+      # 1 imp / 0.01 m³ = 100 imp / m³ (in my case)
+      - lambda: return x * ((1.0 / id(number_gas_pulse_rate).state));
+
+  - platform: template
+    name: Plynomer Gas Consumption m3/h
+    unit_of_measurement: 'm³/h'
+    icon: mdi:fire
+    state_class: measurement
+    device_class: gas
+    accuracy_decimals: 3
+    lambda: |-
+      return id(sensor_gas_pulse_counter).state * 60;
+
+  - platform: total_daily_energy
+    name: Plynomer Gas Daily Total
+    power_id: sensor_gas_pulse_counter
+    unit_of_measurement: 'm³'
+    icon: mdi:fire
+    state_class: total_increasing
+    device_class: gas
+    accuracy_decimals: 2
+    restore: true
+    filters:
+      - lambda: return x * id(number_gas_pulse_rate).state;
+
+number:
+  # select the correct pulse rate for your meter
+  - platform: template
+    id: number_gas_pulse_rate
+    name: 'Pulse rate imp/m3'
+    entity_category: config
+    optimistic: true
+    mode: box
+    min_value: 0
+    max_value: 1000
+    step: 100
+    restore_value: yes
+    initial_value: 100
+
+  # value to set to total gas sensor
+  - platform: template
+    id: number_gas_total_value
+    name: "Plynomer Gas Set Total m3 Value"
+    entity_category: config
+    optimistic: true
+    mode: box
+    min_value: 0
+    max_value: 1000000
+    step: 0.01
+    restore_value: yes
+    initial_value: 0
+
+button:
+  # set the total gas sensor
+  - platform: template
+    name: "Plynomer Gas Set Total m3"
+    entity_category: config
+    on_press:
+      - lambda: id(gas_total_impulses) = id(number_gas_total_value).state * id(number_gas_pulse_rate).state;
+
+  # The factory_reset button allows you to remotely invalidate (reset) all ESPHome preferences stored in flash memory and reboot your node.
+  # After reboot all states, parameters and variables will be reinitialized with their default values.
+  - platform: factory_reset
+    name: Restart with Factory Default Settings

@@ -1,0 +1,436 @@
+substitutions:
+  common_deviceSpecific_comment: "ld2410 v0.3.1"
+  uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
+  uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
+
+# CHANGES
+# v0.3.1 Pavol Holes 2025-05-27
+#   - [button > template > calibrate_ld2410] fixed logging
+# v0.3.0 Pavol Holes 2025-05-14
+#   - [button > template > calibrate_ld2410] added
+# v0.2 Pavol Holes 2024-03-23
+#   - [sensor > ld2410 > light] commented because I don't have use for it
+#   - [binary_sensor > ld2410] commented because all is replaced with custom template sensors
+#   - [binary_sensor > ld2410_still_target_custom > id] changed from [presence_still_custom] to [ld2410_still_target_custom] and replace all occurence in the code where it was used
+#   - [binary_sensor > ld2410_still_target_custom > name] changed from [LD2410 Presence Still Custom] to [LD2410 Still Target Custom]
+#   - [binary_sensor > ld2410_still_target_custom] added [icon: mdi:motion-sensor]
+#   - [binary_sensor > ld2410_presence_custom > id] changed from [ld2410_presence] to [ld2410_presence_custom]  and replace all occurence in the code where it was used
+#   - [binary_sensor > ld2410_presence_custom] added [icon: mdi:account]
+#   - [number > ld2410 > light_threshold] commented because I don't have use for it
+#   - [select > ld2410 > light_function] commented because I don't have use for it
+#   - [select > ld2410 > out_pin_level] commented because I don't have use for it
+#   - [text_sensor > ld2410 > version] added [disabled_by_default: true]
+#   - [text_sensor > ld2410 > mac_address] added [disabled_by_default: true]
+#   - [number > number_still_target_delayed_off > id] from [number_presence_still_delayed_off] to [number_still_target_delayed_off]
+#   - [number > number_still_target_delayed_off > name] changed from [LD2410 Presence Still Delayed Off Seconds] to [LD2410 Still Target Delayed Off Seconds]
+#   - [number > number_still_target_delayed_off > mode] commented to use default value [auto]
+#   - [number > number_still_target_delayed_on > id] from [number_presence_still_delayed_on] to [number_still_target_delayed_on]
+#   - [number > number_still_target_delayed_on > name] changed from [LD2410 Presence Still Delayed On Seconds] to [LD2410 Still Target Delayed On Seconds]
+#   - [number > number_still_target_delayed_on > mode] commented to use default value [auto]
+#   - [number > number_still_energy_threshold > id] from [number_presence_custom_still_energy_threshold] to [number_still_energy_threshold]
+#   - [number > number_still_energy_threshold > name] from [LD2410 Presence Custom Still Energy Threshold] to [LD2410 Still Energy Threshold]
+#   - [number > number_still_energy_threshold > mode] commented to use default value [auto]
+#   - [number > number_move_energy_threshold > id] from [number_presence_custom_move_energy_threshold] to [number_move_energy_threshold]
+#   - [number > number_move_energy_threshold > name] from [LD2410 Presence Custom Move Energy Threshold] to [LD2410 Move Energy Threshold]
+#   - [number > number_move_energy_threshold > mode] commented to use default value [auto]
+#   - [number > number_presence_delayed_on > mode] commented to use default value [auto]
+#   - [number > number_presence_delayed_off > mode] commented to use default value [auto]
+#   - [text_sensor > ld2410_presence_custom_change_reason] new text sensor to keep value the reason why the Presence Custom was changed
+#   - [binary_sensor > ld2410_presence_custom > on_state] moved text from log to variable and log from variable but also publish to the [text_sensor > ld2410_presence_custom_change_reason]
+#
+# v0.1 Pavol Holes 2024-01-29
+#   - initial version 
+
+# DOCUMENTATION
+# https://esphome.io/components/sensor/ld2410.html
+# https://esphome.io/components/uart#uart
+
+uart:
+  - id: uart_ld2410
+    tx_pin: ${uart_ld2410_tx}
+    rx_pin: ${uart_ld2410_rx}
+    baud_rate: 256000
+    parity: "NONE"
+    stop_bits: 1
+    # debug:
+    #   direction: BOTH
+    #   dummy_receiver: false
+    #   sequence:
+    #     - lambda: UARTDebug::log_string(direction, bytes);
+
+ld2410:
+  uart_id: uart_ld2410
+
+switch:
+  - platform: ld2410
+    engineering_mode:
+      name: LD2410 Engineering Mode
+    bluetooth:
+      name: LD2410 Control Bluetooth
+
+binary_sensor:
+  - platform: ld2410
+    has_target:
+      name: LD2410 Presence
+      filters:
+        # delayed_on prevents false positives when background noise spikes randomly
+        # template in miliseconds so we need to multiple with 1000
+        - delayed_on: !lambda |-
+            return id(number_presence_delayed_on).state * 1000.0;
+        # delayed_off prevents false negatives
+        # template in miliseconds so we need to multiple with 1000
+        - delayed_off: !lambda |-
+            return id(number_presence_delayed_off).state * 1000.0;
+    has_moving_target:
+      name: LD2410 Moving Target
+      id: ld2410_moving_target
+    has_still_target:
+      name: LD2410 Still Target
+      id: ld2410_still_target
+      filters:
+        # delayed_on prevents false positives when background noise spikes randomly
+        # template in miliseconds so we need to multiple with 1000
+        - delayed_on: !lambda |-
+            return id(number_still_target_delayed_on).state * 1000.0;
+        # delayed_off prevents false negatives
+        # template in miliseconds so we need to multiple with 1000
+        - delayed_off: !lambda |-
+            return id(number_still_target_delayed_off).state * 1000.0;
+  #   out_pin_presence_status:
+  #     name: LD2410 Out PIN Presence Status
+
+  - platform: template
+    id: ld2410_still_target_custom
+    name: LD2410 Still Target Custom
+    icon: mdi:motion-sensor
+    device_class: occupancy
+    # update_interval: 10s
+    on_state: 
+      then:
+        - lambda: |-
+            ESP_LOGI("ld2410", "[LD2410 Still Target Custom] Presence changed to [%s]. Still energy: [%.0f]. Thresold: [%.0f]", id(ld2410_still_target_custom).state ? "ON" : "OFF", id(ld2410_still_energy).state, id(number_still_energy_threshold).state);
+    lambda: |-
+      if ((id(ld2410_still_energy).state > id(number_still_energy_threshold).state) ) {
+        return true;
+      } else {
+        return false;
+      }
+    filters:
+      # delayed_on prevents false positives when background noise spikes randomly
+      # template in miliseconds so we need to multiple with 1000
+      - delayed_on: !lambda |-
+          return id(number_still_target_delayed_on).state * 1000.0;
+      # delayed_off prevents false negatives
+      # template in miliseconds so we need to multiple with 1000
+      - delayed_off: !lambda |-
+          return id(number_still_target_delayed_off).state * 1000.0;
+
+  - platform: template
+    id: ld2410_presence_custom
+    name: LD2410 Presence Custom
+    icon: mdi:account
+    device_class: occupancy
+    # update_interval: 10s
+    on_state: 
+      then:
+        - lambda: |-
+            // ESP_LOGI("ld2410", "[LD2410 Presence Custom] Presence changed to [%s]. Still energy: [%.0f], Move energy: [%.0f].", id(ld2410_presence_custom).state ? "ON" : "OFF", id(ld2410_still_energy).state, id(ld2410_move_energy).state);
+            std::string vText = "Presence changed to [" + to_string(id(ld2410_presence_custom).state ? "ON" : "OFF") + "]. Still energy: [" + to_string((int)id(ld2410_still_energy).state) + "], Move energy: [" + to_string((int)id(ld2410_move_energy).state) + "].";
+            id(ld2410_presence_custom_change_reason).publish_state(vText);
+            ESP_LOGI("ld2410", "[LD2410 Presence Custom] %s", vText.c_str());
+    lambda: |-
+      if (id(ld2410_still_target_custom).state || id(ld2410_move_energy).state > id(number_move_energy_threshold).state ) {
+        return true;
+      } else {
+        return false;
+      }
+    filters:
+      # delayed_on prevents false positives when background noise spikes randomly
+      # template in miliseconds so we need to multiple with 1000
+      - delayed_on: !lambda |-
+          return id(number_presence_delayed_on).state * 1000.0;
+      # delayed_off prevents false negatives
+      # template in miliseconds so we need to multiple with 1000
+      - delayed_off: !lambda |-
+          return id(number_presence_delayed_off).state * 1000.0;
+
+sensor:
+  - platform: ld2410
+    # light:
+    #   name: LD2410 Light
+    moving_distance:
+      name: LD2410 Moving Distance
+    still_distance:
+      name: LD2410 Still Distance
+    moving_energy:
+      name: LD2410 Move Energy
+      id: ld2410_move_energy
+    still_energy:
+      name: LD2410 Still Energy
+      id: ld2410_still_energy
+    detection_distance:
+      name: LD2410 Detection Distance
+    g0:
+      move_energy:
+        name: LD2410 g0 Move Energy
+      still_energy:
+        name: LD2410 g0 Still Energy
+    g1:
+      move_energy:
+        name: LD2410 g1 Move Energy
+      still_energy:
+        name: LD2410 g1 Still Energy
+    g2:
+      move_energy:
+        name: LD2410 g2 Move Energy
+      still_energy:
+        name: LD2410 g2 Still Energy
+    g3:
+      move_energy:
+        name: LD2410 g3 Move Energy
+      still_energy:
+        name: LD2410 g3 Still Energy
+    g4:
+      move_energy:
+        name: LD2410 g4 Move Energy
+      still_energy:
+        name: LD2410 g4 Still Energy
+    g5:
+      move_energy:
+        name: LD2410 g5 Move Energy
+      still_energy:
+        name: LD2410 g5 Still Energy
+    g6:
+      move_energy:
+        name: LD2410 g6 Move Energy
+      still_energy:
+        name: LD2410 g6 Still Energy
+    g7:
+      move_energy:
+        name: LD2410 g7 Move Energy
+      still_energy:
+        name: LD2410 g7 Still Energy
+    g8:
+      move_energy:
+        name: LD2410 g8 Move Energy
+      still_energy:
+        name: LD2410 g8 Still Energy
+
+number:
+  - platform: ld2410
+    timeout:
+      name: LD2410 Timeout
+    # light_threshold:
+    #   name: LD2410 Light Threshold
+    max_move_distance_gate:
+      name: LD2410 Max Move Distance Gate
+    max_still_distance_gate:
+      name: LD2410 Max Still Distance Gate
+    g0:
+      move_threshold:
+        name: LD2410 g0 Move Threshold
+      still_threshold:
+        name: LD2410 g0 Still Threshold
+    g1:
+      move_threshold:
+        name: LD2410 g1 Move Threshold
+      still_threshold:
+        name: LD2410 g1 Still Threshold
+    g2:
+      move_threshold:
+        name: LD2410 g2 Move Threshold
+      still_threshold:
+        name: LD2410 g2 Still Threshold
+    g3:
+      move_threshold:
+        name: LD2410 g3 Move Threshold
+      still_threshold:
+        name: LD2410 g3 Still Threshold
+    g4:
+      move_threshold:
+        name: LD2410 g4 Move Threshold
+      still_threshold:
+        name: LD2410 g4 Still Threshold
+    g5:
+      move_threshold:
+        name: LD2410 g5 Move Threshold
+      still_threshold:
+        name: LD2410 g5 Still Threshold
+    g6:
+      move_threshold:
+        name: LD2410 g6 Move Threshold
+      still_threshold:
+        name: LD2410 g6 Still Threshold
+    g7:
+      move_threshold:
+        name: LD2410 g7 Move Threshold
+      still_threshold:
+        name: LD2410 g7 Still Threshold
+    g8:
+      move_threshold:
+        name: LD2410 g8 Move Threshold
+      still_threshold:
+        name: LD2410 g8 Still Threshold
+
+  - platform: template
+    id: number_still_energy_threshold
+    name: LD2410 Still Energy Threshold
+    # device_class: duration
+    optimistic: true
+    # mode: box
+    min_value: 0
+    max_value: 100
+    step: 1
+    restore_value: yes
+    initial_value: 15
+    # unit_of_measurement: s
+    icon: mdi:meditation
+    entity_category: config
+
+  - platform: template
+    id: number_move_energy_threshold
+    name: LD2410 Move Energy Threshold
+    # device_class: duration
+    optimistic: true
+    # mode: box
+    min_value: 0
+    max_value: 100
+    step: 1
+    restore_value: yes
+    initial_value: 40
+    # unit_of_measurement: s
+    icon: mdi:run-fast
+    entity_category: config
+
+  - platform: template
+    id: number_presence_delayed_on
+    name: LD2410 Presence Delayed On Seconds
+    device_class: duration
+    optimistic: true
+    # mode: box
+    min_value: 0
+    max_value: 10
+    step: 1
+    restore_value: yes
+    initial_value: 0
+    unit_of_measurement: s
+    icon: mdi:timer
+    entity_category: config
+
+  - platform: template
+    id: number_presence_delayed_off
+    name: LD2410 Presence Delayed Off Seconds
+    device_class: duration
+    optimistic: true
+    # mode: box
+    min_value: 0
+    max_value: 60
+    step: 1
+    restore_value: yes
+    initial_value: 30
+    unit_of_measurement: s
+    icon: mdi:timer-off
+    entity_category: config
+
+  - platform: template
+    id: number_still_target_delayed_on
+    name: LD2410 Still Target Delayed On Seconds
+    device_class: duration
+    optimistic: true
+    # mode: box
+    min_value: 0
+    max_value: 10
+    step: 1
+    restore_value: yes
+    initial_value: 5
+    unit_of_measurement: s
+    icon: mdi:timer
+    entity_category: config
+
+  - platform: template
+    id: number_still_target_delayed_off
+    name: LD2410 Still Target Delayed Off Seconds
+    device_class: duration
+    optimistic: true
+    # mode: box
+    min_value: 0
+    max_value: 60
+    step: 1
+    restore_value: yes
+    initial_value: 30
+    unit_of_measurement: s
+    icon: mdi:timer-off
+    entity_category: config
+
+button:
+  - platform: ld2410
+    factory_reset:
+      name: LD2410 Factory Reset
+    restart:
+      name: LD2410 Restart
+    query_params:
+      name: LD2410 Query Params
+  - platform: template
+    name: LD2410 Auto-calibration
+    id: calibrate_ld2410
+    entity_category: config
+    on_press:
+      then:
+        # 1. Enable Configuration Mode
+        - lambda: |-
+            ESP_LOGI("ld2410", "[LD2410 Auto-calibration] Starting LD2410 calibration sequence... You have 10 seconds to clear the room!");
+            ESP_LOGD("ld2410", "[LD2410 Auto-calibration] Sending Enable Configuration command (0x00FF)");
+        - uart.write:
+            id: uart_ld2410
+            # Data: HDR | LEN=4 | CMD=0xFF | VAL=0x01 | FTR
+            data: [0xFD, 0xFC, 0xFB, 0xFA, 0x04, 0x00, 0xFF, 0x00, 0x01, 0x00, 0x04, 0x03, 0x02, 0x01]
+        - delay: 1000ms
+
+        # 2. Start the auto-calibration
+        - lambda: |-
+            ESP_LOGD("ld2410", "[LD2410 Auto-calibration] Sending Start Calibration command (0x000B, 60s)");
+        - uart.write:
+            id: uart_ld2410
+            # Data: HDR | LEN=4 | CMD=0x0B | VAL=0x3C00 | FTR
+            data: [0xFD, 0xFC, 0xFB, 0xFA, 0x04, 0x00, 0x0B, 0x00, 0x3C, 0x00, 0x04, 0x03, 0x02, 0x01]
+        - delay: 1000ms
+
+        # 3. Disable Configuration Mode
+        - lambda: |-
+            ESP_LOGD("ld2410", "[LD2410 Auto-calibration] Sending End Configuration command (0x00FE)");
+        - uart.write:
+            id: uart_ld2410
+            # Data: HDR | LEN=2 | CMD=0xFE | FTR (No value needed)
+            data: [0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0xFE, 0x00, 0x04, 0x03, 0x02, 0x01]
+        - lambda: |-
+            ESP_LOGI("ld2410", "[LD2410 Auto-calibration] LD2410 calibration sequence sent. Ensure room is empty for 70 seconds!");
+
+        - delay: 70000ms
+        - lambda: |-
+            ESP_LOGI("ld2410", "[LD2410 Auto-calibration] LD2410 calibration finished. Force a query to download new parameters.");
+
+
+text_sensor:
+  - platform: ld2410
+    version:
+      name: LD2410 Firmware Version
+      disabled_by_default: true
+    mac_address:
+      name: LD2410 MAC Address
+      disabled_by_default: true
+  
+  - platform: template
+    id: ld2410_presence_custom_change_reason
+    name: LD2410 Presence Custom Change Reason
+    icon: mdi:math-log
+
+select:
+  - platform: ld2410
+    distance_resolution:
+      name: LD2410 Distance Resolution
+    baud_rate:
+      name: LD2410 Baud Rate
+    # light_function:
+    #   name: LD2410 Light Function
+    # out_pin_level:
+    #   name: LD2410 Out PIN Level

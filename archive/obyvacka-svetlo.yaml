@@ -1,0 +1,20 @@
+substitutions:
+  device_name: obyvacka-svetlo
+  friendly_name: Obyvacka Svetlo
+  room: Obyvacka
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.4"
+  device_type: Shelly Dimmer2
+  button_pin: "GPIO14"
+  max_power: "220.0" # watt
+  max_temp: "70.0" # °C
+  light_nightBrightnessLevel: "0.01"
+  light_eveningBrightnessLevel: "0.20"
+  light_fadingStep: "0.05"
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  common: !include pavolholes_common/common.yaml
+  # debug: !include pavolholes_common/debug.yaml
+  web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
+  shellyDimmer1and2: !include pavolholes_common/shellyDimmer1and2.yaml

@@ -1,0 +1,241 @@
+substitutions:
+  device_name: zahrada-nadrz
+  friendly_name: Zahrada Nadrz
+  room: Zahrada
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.5"
+  device_type: ESP32 WROOM-32
+
+  i2c_sda: GPIO21
+  i2c_scl: GPIO22
+
+  relay_ventil1_pin: GPIO19
+  relay_ventil2_pin: GPIO18
+  relay_ventil3_pin: GPIO5
+  relay_ventil4_pin: GPIO17
+  relay_ventil5_pin: GPIO16
+  relay_ventil6_pin: GPIO4
+
+  # ultrasonic je citlivy na ulozenie kablu, nesmie byt pri ~220V, nesmie byt zmotany do klbka atd.
+  ultrasonic_trigger_pin: GPIO14
+  ultrasonic_echo_pin: GPIO27
+
+  studna_prietok_pin: GPIO25
+  cerpadlo_prietok_pin: GPIO26
+
+  adc_pin: GPIO35
+
+esp32:
+  board: esp32doit-devkit-v1
+  # board: esp32dev
+  # board: nodemcu-32s
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  common: !include pavolholes_common/common.yaml
+  debug: !include pavolholes_common/debug.yaml
+  esp32: !include pavolholes_common/esp32.yaml
+  web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
+  # bme_280: !include pavolholes_common/sensor/bme280.yaml
+
+# Enable logging
+logger:
+  level: INFO #DEBUG # (default is DEBUG)
+
+switch:
+  - platform: gpio
+    name: Ventil 1
+    icon: mdi:pipe-valve
+    pin:
+      number: ${relay_ventil1_pin}
+      inverted: true
+    #restore_mode: RESTORE_INVERTED_DEFAULT_OFF
+    #restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: Ventil 2
+    icon: mdi:pipe-valve
+    pin:
+      number: ${relay_ventil2_pin}
+      inverted: true
+    #restore_mode: RESTORE_INVERTED_DEFAULT_OFF
+    #restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: Ventil 3
+    icon: mdi:pipe-valve
+    pin:
+      number: ${relay_ventil3_pin}
+      inverted: true
+    #restore_mode: RESTORE_INVERTED_DEFAULT_OFF
+    #restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: Ventil 4
+    icon: mdi:pipe-valve
+    pin:
+      number: ${relay_ventil4_pin}
+      inverted: true
+    #restore_mode: RESTORE_INVERTED_DEFAULT_OFF
+    #restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: Ventil 5
+    icon: mdi:pipe-valve
+    pin:
+      number: ${relay_ventil5_pin}
+      inverted: true
+    #restore_mode: RESTORE_INVERTED_DEFAULT_OFF
+    #restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: Ventil 6
+    icon: mdi:pipe-valve
+    pin:
+      number: ${relay_ventil6_pin}
+      inverted: false
+    #restore_mode: RESTORE_INVERTED_DEFAULT_OFF
+    #restore_mode: RESTORE_DEFAULT_OFF
+
+sensor:
+  - platform: pulse_counter
+    pin: ${cerpadlo_prietok_pin}
+    unit_of_measurement: L/min
+    id: cerpadlo_prietok
+    name: Cerpadlo Prietok
+    icon: mdi:water-pump
+    update_interval: 5s
+    filters:
+      # Model: FS400A 1"
+      # 1L = 5,5 * Q source: https://allegro.sk/ponuka/prietokomer-snimac-prietoku-vody-14129920577
+      # asi ten isty produkt na Aliexpresse tvrdi, ze f = 4,5 * Q cize 270 pulzov na liter vody
+      #- lambda: return (x / 5.5 / 60); # F(Hz)=(5,5*Q) -> F=x -> x=5,5*Q -> Q=x/5,5 -> that's per second so devide with 60 to get per minute
+      - lambda: return (x / 270);
+    total:
+      unit_of_measurement: L
+      name: Cerpadlo Total
+      icon: mdi:water-pump
+      accuracy_decimals: 2
+      filters:
+        - lambda: return (x / 270);
+
+  - platform: pulse_counter
+    pin: ${studna_prietok_pin}
+    unit_of_measurement: L/min
+    id: studna_prietok
+    name: Studna Prietok
+    icon: mdi:water-well-outline
+    update_interval: 5s
+    filters:
+      # 1L = 300Hz F=5*Q source: https://www.aliexpress.com/i/4001076782927.html
+      - lambda: return (x / 420); 
+      # - lambda: return (x+8)/6/60; #Flow pulse: F=(6*Q-8)±3% with Q=L/min > F=x -> x=6*Q-8 -> x+8=6*Q -> (x+8)/6=Q -> Q=(x+8)/6 > -> that's per second so devide with 60 to get per minute
+    total:
+      unit_of_measurement: L
+      name: Studna Total
+      icon: mdi:water-well-outline
+      accuracy_decimals: 2
+      filters:
+        - lambda: return (x / 420);
+
+  - platform: adc
+    pin: ${adc_pin}
+    name: Cerpadlo Tlak
+    unit_of_measurement: bar
+    accuracy_decimals: 1
+    update_interval: 10s
+    attenuation: auto
+    on_raw_value: 
+      then:
+        - sensor.template.publish:
+            id: cerpadlo_tlak_raw
+            state: !lambda 'return  x;'
+    filters:
+      - filter_out: nan
+      - median:
+          window_size: 7
+          send_every: 4
+          send_first_at: 3
+      - calibrate_linear:
+          - 0.44 -> 0.0 # 0.46
+          - 4.5 -> 12.0
+
+  - platform: template
+    name: Cerpadlo Tlak RAW
+    id: cerpadlo_tlak_raw
+    internal: False
+    icon: mdi:align-vertical-top
+    accuracy_decimals: 1
+    update_interval: 60s 
+
+  - platform: ultrasonic
+    trigger_pin: ${ultrasonic_trigger_pin}
+    echo_pin: ${ultrasonic_echo_pin}
+    name: Vyska hladiny
+    unit_of_measurement: m
+    icon: mdi:align-vertical-bottom
+    accuracy_decimals: 2
+    update_interval: 10s
+    pulse_time: 50us #10us #20us
+    timeout: 2m # 4m
+    on_raw_value: 
+      then:
+        - lambda: |-
+            ESP_LOGD("ultrasonic", "ultrasonic_raw: [%s]", x.c_str());
+        - sensor.template.publish:
+            id: vzdialenost_hladiny_raw
+            state: !lambda 'return  x;'
+    filters:
+      - filter_out: nan
+      # - median: # median je rychlejsi pri napustani ale pomalsie sa aktualizuje pri vypustani
+      # - max: # max je rychlejsi pri vypustani ale pomalsie sa aktualizuje pri napustani
+      - median:
+          window_size: 7 #10
+          send_every: 4 #1
+          send_first_at: 3 #1
+      - calibrate_linear: # https://markus-haack.com/watertank-esphome/
+        - 0.20 -> 0.76 # plna nadrz 0.20m je min. vzdialenost hladiny od senzoru, co predstavuje vysku vody 0.76m od dna (0.96 - 0.20)
+        - 0.96 -> 0.0 # prazdna nadrz je podla merania 0.96m od senzoru
+    on_value:
+      then:
+        - sensor.template.publish:
+            id: mnozstvo_vody
+            # plna: 100% = 0.96 - 0.20 = 0.76m vyska hladiny
+            # 1000L je 0.84m vyska hladiny
+            # kolko je 1cm = 1000 l / 84cm => 11,9047619 l/cm
+            # kolko litrov je 0.76m? 0.76m * (1000 l / 0.84) = 904 l <= KAPACITA
+            # 1cm = 904 / 0.76 * 0.01 = 11,8947L
+            # mnozstvo vody = aktualna_vyska * kapacita / max_vyska * 
+            state: !lambda 'return  (x * (1000 / 0.84 * 0.76) / 0.76);'
+        - sensor.template.publish:
+            id: objem
+            # objem = mnozstvo_vody / kapacita * 100
+            state: !lambda 'return ((x * (1000 / 0.84 * 0.76) / 0.76) / (1000 / 0.84 * 0.76) * 100);'
+            # state: !lambda 'return ((826 / 0.76 * x) / 826 * 100);'
+
+  - platform: template
+    name: Vzdialenost hladiny RAW
+    id: vzdialenost_hladiny_raw
+    internal: False
+    unit_of_measurement: m
+    icon: mdi:align-vertical-top
+    accuracy_decimals: 2
+    update_interval: 60s
+
+  - platform: template
+    name: Mnozstvo vody
+    id: mnozstvo_vody
+    unit_of_measurement: L
+    device_class: volume
+    icon: mdi:barrel
+    accuracy_decimals: 0
+    update_interval: 15s
+
+  - platform: template
+    name: Objem
+    id: objem
+    unit_of_measurement: "%"
+    device_class: volume
+    icon: mdi:water-percent
+    accuracy_decimals: 0
+    update_interval: 15s

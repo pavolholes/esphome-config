@@ -1,0 +1,20 @@
+substitutions:
+  common_deviceSpecific_comment: "ds18b20 v0.1"
+  ds18b20_1wire_pin: GPIO15
+  # ds18b20_address: "0x1c0000031edd2a28"
+
+# CHANGES
+# v0.1 2024-01-32
+#   - initial version 
+
+# DOCUMENTATION
+# https://esphome.io/components/sensor/dallas
+
+dallas:
+  - pin: ${ds18b20_1wire_pin}
+
+sensor:
+  - platform: dallas
+    # address: ${ds18b20_address}
+    index: 0
+    name: Teplota

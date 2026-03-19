@@ -1,0 +1,65 @@
+# https://esphome.io/components/debug.html#debug-component
+
+# changes tracking
+# v0.2 225-06-17 Pavol
+#   - changed logger from DEBUG to VERY_VERBOSE
+#   - added list of specific logs with INFO level
+# v0.1 2024-01-12
+#   - initial version
+
+debug:
+  update_interval: 5s
+
+# Logger must be at least debug (default)
+logger:
+  level: VERY_VERBOSE  # (default is DEBUG; another option is VERY_VERBOSE)
+  logs:
+    json: INFO
+    sensor: INFO
+    sensor.filter: INFO
+    adc: INFO
+    ntc: INFO
+    resistance: INFO
+    text_sensor: INFO
+    api: INFO
+    api.service: INFO
+    api.connection: INFO
+    ledc: INFO
+    internal_temperature: INFO
+    esp32.preferences: INFO
+    esp32_ble_tracker: INFO
+    esp32_ble: INFO
+    bluetooth_proxy: INFO
+    i2c: INFO
+    i2c.idf: INFO
+    ld2410: INFO
+    bh1750.sensor: INFO
+
+text_sensor:
+  - platform: debug
+    device:
+      name: Device Info
+    reset_reason:
+      name: Reset Reason
+
+sensor:
+  - platform: debug
+    free:
+      name: Debug HEAP Free
+    # fragmentation: # ESP8266 only
+      # name: Debug HEAP Fragmentation
+    block:
+      name: Debug HEAP Max Block
+    loop_time:
+      name: Debug Loop Time
+    # psram:
+    #   name: Debug PSRAM Free
+
+  # - platform: template
+  #   name: Debug HEAP Free 2
+  #   lambda: return heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+  #   icon: "mdi:memory"
+  #   entity_category: diagnostic
+  #   state_class: measurement
+  #   unit_of_measurement: "b"
+  #   update_interval: 60s

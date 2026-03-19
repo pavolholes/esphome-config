@@ -1,0 +1,153 @@
+substitutions:
+  common_deviceSpecific_comment: "LILYGO T-Display S3 AMOLED Touch v0.1"
+
+esphome:
+  platformio_options:
+    build_unflags: -Werror=all
+    board_build.flash_mode: dio
+
+esp32:
+  variant: esp32s3
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+psram:
+  mode: octal
+
+spi:
+  id: quad_spi
+  type: quad
+  clk_pin: 47
+  data_pins:
+    - 18
+    - 7
+    - 48
+    - 5
+
+i2c:
+  sda: 3
+  scl: 2
+
+touchscreen:
+  - platform: cst816
+    id: my_touchscreen
+    interrupt_pin:
+      number: 21
+      allow_other_uses: true
+    on_release:
+      - if:
+          condition: lvgl.is_paused
+          then:
+            - logger.log: "LVGL resuming"
+            - lvgl.resume:
+            - lvgl.widget.redraw:
+            - lambda: |-
+                id(main_lcd).set_brightness(255);
+            # - light.turn_on: main_lcd_backlight
+
+display:
+  - platform: qspi_dbi
+    model: RM67162
+    id: main_lcd
+    dimensions:
+      height: 240
+      width: 536
+    transform:
+      mirror_x: true
+      swap_xy: true
+    color_order: rgb
+    brightness: 255
+    cs_pin: 6
+    reset_pin: 17
+    enable_pin:
+      number: 38
+      allow_other_uses: true
+    update_interval: never
+    auto_clear_enabled: false
+
+output:
+  - platform: ledc
+    pin:
+      number: 38
+      allow_other_uses: true
+    id: main_lcd_backlight_output
+    frequency: 2000
+
+light:
+  - platform: monochromatic
+    output: main_lcd_backlight_output
+    id: main_lcd_backlight
+    name: Podsvietenie
+    restore_mode: RESTORE_DEFAULT_ON
+
+binary_sensor:
+  - platform: gpio
+    name: "Button Bottom"
+    pin: 
+      number: GPIO0
+      inverted: true
+    internal: false
+    on_click: 
+      then:
+        lambda: |-          
+          id(main_lcd).set_brightness(0);
+
+  - platform: gpio
+    name: "Display Touch"
+    pin: 
+      number: GPIO21
+      inverted: true
+      allow_other_uses: true
+    internal: false
+    on_click: 
+      then:
+        lambda: |-
+          id(main_lcd).turn_on();
+          id(main_lcd).set_brightness(255);
+
+number:
+  - platform: template
+    name: LVGL Screen timeout
+    optimistic: true
+    id: display_timeout
+    unit_of_measurement: "s"
+    initial_value: 45
+    restore_value: true
+    min_value: 10
+    max_value: 180
+    step: 5
+    mode: box
+
+lvgl:
+  - id: lvgl_main
+    on_idle:
+      timeout: !lambda "return (id(display_timeout).state * 1000);"
+      then:
+        - logger.log: "LVGL is idle"
+        - lambda: |-
+            id(main_lcd).set_brightness(0);
+        # - light.turn_off: main_lcd_backlight
+        - lvgl.pause:
+
+# binary_sensor:
+#   # Button to cycle through pages on the display
+#   - platform: gpio
+#     pin:
+#       number: GPIO21
+#       inverted: true
+#     id: button_1
+#     on_press:
+#       then:
+#         - display.page.show_next: main_lcd
+
+# status_led:
+#   pin:
+#     number: GPIO38
+#     inverted: True
+    # ignore_strapping_warning: True
+
+sensor:
+  - platform: internal_temperature
+    name: Internal Temperature
+    id: sensor_internal_temperature

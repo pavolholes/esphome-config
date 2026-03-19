@@ -1,0 +1,76 @@
+substitutions:
+  common_deviceSpecific_comment: "shellyRGBW v0.5"
+
+# changes tracking
+# v0.5 2025-04-18
+#   - changed [esphome] > [platform: ESP8266] and [board: esp01_1m] to [esp8266] > [board: esp01_1m]
+# v0.4 Pavol 2025-01-03
+#   - [status_led > pin > ignore_strapping_warning] commented because it's invalid
+# v0.3 Pavol 2023-03-05
+#   - changed "board: modwifi" to "board: esp01_1m" in "esphome" section. Source: https://www.esphome-devices.com/devices/Shelly-RGBW2
+
+esp8266:
+  board: esp01_1m
+
+logger:
+  baud_rate: 0 # disable logging to serial console because serial port (UART) is used to communicate with dimmer module
+  # uncoment below line (level: VERBOSE) for debugging the button timing - it enables global VERBOSE logging but all other chatty modules are kept as INFO
+  # level: VERBOSE
+  logs:
+    json: INFO
+    sensor: INFO
+    text_sensor: INFO
+
+status_led:
+  pin:
+    number: GPIO2 #D4 #BUILTIN_LED
+    inverted: True
+    # ignore_strapping_warning: True
+
+sensor:
+  - platform: adc
+    id: sensor_current_raw
+    name: ${friendly_name} ADC
+    update_interval: 1s
+    pin: A0
+    internal: true
+    accuracy_decimals: 4
+
+  - platform: template
+    name: "${friendly_name} Power"
+    unit_of_measurement: W
+    accuracy_decimals: 1
+    device_class: power
+    update_interval: 30s
+    id: sensor_my_power
+    lambda: return id(sensor_current_raw).state;
+    filters:
+      - calibrate_linear:
+        - 0.4000 -> 0.0
+        - 0.4043 -> 0.14
+        - 0.4053 -> 0.20
+      - multiply: 12 # 12V lamp
+
+  - platform: total_daily_energy
+    name: ${friendly_name} Energy
+    power_id: sensor_my_power
+    filters:
+      # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001
+    unit_of_measurement: kWh
+
+light:
+  - platform: monochromatic
+    name: "${friendly_name} Light"
+    icon:  mdi:led-strip-variant
+    id: light_pwm
+    output: output_pwm
+    restore_mode: ALWAYS_OFF #RESTORE_DEFAULT_OFF
+    gamma_correct: 1.0 # to start brightness at 0.01 not at 0.18
+
+output:
+  - platform: esp8266_pwm
+    id: output_pwm
+    pin: ${pwm_pin}
+    frequency: 1000 Hz
+    #min_power: 0.005

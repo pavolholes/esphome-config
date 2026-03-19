@@ -1,0 +1,21 @@
+# https://esphome.io/components/syslog.html
+
+# changes tracking
+# v0.1 2025-06-17 Pavol
+#   - initial version
+
+udp:
+  id: udp_syslog
+  addresses: 192.168.2.20
+
+# time already synced from ntp in [common.yaml]
+# time:
+  # platform: sntp
+
+syslog:
+  udp_id: udp_syslog
+  time_id: sntp_time
+  # port: 514 # The port to send logs to. Defaults to 514.
+  # facility: 16 # The syslog facility to use. Defaults to 16 (corresponding to local0).
+  level: VERY_VERBOSE # The highest log level to send to the syslog server. Defaults to DEBUG.
+  # strip: true # If set, remove color-codes from log messages. Defaults to true.

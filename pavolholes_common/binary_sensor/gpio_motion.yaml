@@ -1,0 +1,36 @@
+substitutions:
+  motion_pin: GPIO10
+  motion_pullup: INPUT_PULLUP
+  motion_inverted: "False"
+
+binary_sensor:
+  # GPIO binary_sensor (input) for motion sensor.
+  - platform: gpio
+    id: binary_sensor_motion
+    device_class: motion
+    name: Motion
+    pin:
+      number: ${motion_pin}
+      # Pullup means it's switching ground (that's why it's inverted as well).
+      mode: ${motion_pullup}
+      inverted: ${motion_inverted}
+    filters:
+      # - delayed_on: 50ms
+      # - delayed_on_off: 30ms
+      - delayed_off:  !lambda 'return id(motion_off_latency).state * 1000.0;'
+      # - invert:
+
+number:
+  - platform: template
+    name: Motion off latency
+    icon: mdi:clock-end
+    entity_category: config
+    id: motion_off_latency
+    min_value: 1
+    max_value: 120
+    initial_value: 10
+    optimistic: true
+    step: 5
+    restore_value: true
+    unit_of_measurement: seconds
+    mode: slider

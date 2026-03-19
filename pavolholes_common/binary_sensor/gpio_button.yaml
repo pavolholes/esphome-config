@@ -1,0 +1,22 @@
+substitutions:
+  button_pin: GPIO12
+  button_pullup: INPUT_PULLDOWN
+  button_inverted: "False"
+
+binary_sensor:
+  # Create gpio binary_sensor (input) for button connected to pin.
+  - platform: gpio
+    id: wall_button
+    name: Button
+    device_class: light
+    internal: True
+    pin:
+      number: ${button_pin}
+      # Pullup means it's switching ground (that's why it's inverted as well).
+      mode: ${button_pullup}
+      inverted: ${button_inverted}
+    filters:
+      # - delayed_on: 50ms
+      - delayed_on_off: 30ms
+      # - invert:
+    on_multi_click: !include { file: gpio_button_multiclick.yaml, vars: { light_id: light_pwm } }

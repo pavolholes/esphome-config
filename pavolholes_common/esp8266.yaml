@@ -1,0 +1,15 @@
+substitutions:
+  common_deviceSpecific_comment: "ESP8266 v0.2"
+
+# CHANGES
+# v0.2 2025-04-18
+#   - changed [esphome] > [platform: ESP8266] and [board: d1_mini] to [esp8266] > [board: d1_mini]
+
+esp8266:
+  board: d1_mini
+
+status_led:
+  pin:
+    number: GPIO2 #D4 #BUILTIN_LED
+    inverted: True
+    # ignore_strapping_warning: True

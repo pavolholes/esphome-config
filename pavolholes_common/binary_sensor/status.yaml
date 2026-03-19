@@ -1,0 +1,4 @@
+# HA sensor showing if device is connected
+platform: status
+device_class: connectivity
+name: Status

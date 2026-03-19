@@ -1,0 +1,91 @@
+# CHANGES
+# v0.2 Pavol Holes 2025-01-27
+#   - added motion sensor
+# v0.1 Pavol Holes 2025-01-08
+#   - initial version
+
+substitutions:
+  device_name: herna-multisensor
+  friendly_name: Herna Multisensor
+  room: Herna
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.2"
+  device_type: ESP32-C3-super-mini
+  
+  # I2C: BME280 (H&T&P), BH1750 (lux)
+  i2c_sda: GPIO0
+  i2c_scl: GPIO1
+  # bme280_temperature_offset: "-4.4"
+
+  # UART: LD2420
+  ld2420_uart_tx: GPIO6 # GPIO21 was not working # RX
+  ld2420_uart_rx: GPIO7 # GPIO20 was not working # TX
+
+  # Motion sensor small
+  motion_pin: GPIO3
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  common: !include pavolholes_common/common.yaml
+  # esp32: !include pavolholes_common/esp32.yaml
+  esp32-c3-super-mini: !include pavolholes_common/esp32-c3-super-mini.yaml
+  # debug: !include pavolholes_common/debug.yaml
+  # web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
+  esp32BluetoothProxy: !include pavolholes_common/esp32BluetoothProxy.yaml # including this changes the framework so the first time it have to be loaded to ESP using USB cable, not OTA!
+  bh1750: !include pavolholes_common/sensor/bh1750.yaml
+  bme280: !include pavolholes_common/sensor/bme280.yaml
+  ld2420: !include pavolholes_common/sensor/ld2420.yaml
+  gpio_motion: !include pavolholes_common/binary_sensor/gpio_motion.yaml
+
+# Extend included sensors
+# https://esphome.io/guides/configuration-types.html#extend
+# sensor:
+#   - id: !extend bme280_temperature
+#     filters:
+#       - offset: -4.50
+
+# Motion sensor set GPIO4 to GND for power supply
+output:
+  - platform: gpio
+    pin: GPIO4
+    id: motion_gnd
+esphome:
+  on_boot:
+  - priority: 90
+    then:
+    - output.turn_off: motion_gnd
+
+binary_sensor:
+  - platform: template
+    name: Occupancy
+    id: occupancy
+    device_class: occupancy
+    filters:
+      - delayed_off: !lambda 'return id(occupancy_off_latency).state * 1000.0;'
+    on_state:
+      - lambda: 'id(illuminance_sensor).update();'
+    lambda: |-
+      if ( id(ld2420_presence).state or id(binary_sensor_motion).state) {
+        return true;
+      } 
+      else if (id(ld2420_presence).state == 0 and id(binary_sensor_motion).state == 0) {
+        return false;
+      } 
+      else {
+        return id(occupancy).state;
+      }
+
+number:
+  - platform: template
+    name: Occupancy off latency
+    icon: mdi:clock-end
+    entity_category: config
+    id: occupancy_off_latency
+    min_value: 1
+    max_value: 600
+    initial_value: 15
+    optimistic: true
+    step: 5
+    restore_value: true
+    unit_of_measurement: seconds
+    mode: slider

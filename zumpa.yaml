@@ -1,0 +1,94 @@
+substitutions:
+  device_name: zumpa
+  friendly_name: Dvor Zumpa
+  room: Dvor
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.4"
+  device_type: ESP8266 D1mini
+  i2c_sda: D2
+  i2c_scl: D1
+  bme280_sensorName: ${friendly_name}
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  common: !include pavolholes_common/common.yaml
+  esp8266: !include pavolholes_common/esp8266.yaml
+  # debug: !include pavolholes_common/debug.yaml
+  web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
+  bme_280: !include pavolholes_common/sensor/bme280.yaml
+
+sensor:
+  - platform: ultrasonic
+    trigger_pin: TX
+    echo_pin: RX
+    name: Vzdialenost hladiny RAW
+    id: vzdialenost_hladiny_raw
+    internal: True
+    unit_of_measurement: m
+    icon: mdi:align-vertical-top
+    accuracy_decimals: 2
+    update_interval: 10s
+    pulse_time: 20us
+    timeout: 4m
+    filters:
+      - filter_out: nan
+
+  - platform: template
+    lambda: return (id(vzdialenost_hladiny_raw).state);
+    name: Vzdialenost hladiny
+    id: vzdialenost_hladiny
+    unit_of_measurement: m
+    icon: mdi:align-vertical-top
+    accuracy_decimals: 2
+    update_interval: 60s
+    filters:
+      - delta : 0.01 # only send the result if the difference with the last sent result is higher than this
+      - quantile: # https://esphome.io/components/sensor/index.html#quantile
+          quantile: 0.9
+          window_size: 60 # calculate value over this many values in past
+          send_every: 12 # evaluate value every 2 minutes (12 * update_interval = 12 * 10s) over window_size
+          send_first_at: 12 # when to send the first value after boot, must be smaller or equal to send_every; 6 * 20s = 2 min
+
+  - platform: template
+    lambda: return (id(vzdialenost_hladiny).state);
+    name: Vyska hladiny
+    id: vyska_hladiny
+    unit_of_measurement: m
+    icon: mdi:align-vertical-bottom
+    accuracy_decimals: 2
+    update_interval: 60s
+    filters:
+      - delta : 0.01 # only send the result if the difference with the last sent result is higher than this
+      - calibrate_linear:
+        - 2.72 -> 0.0 # prazdna: 0.0m splasiek = vzdialenost senzoru od dna 2.72 m
+        - 1.02 -> 1.70 # plna: 12m3 / 2.34 / 3.0 = 1.70 m -> vzdialenost senzoru plnej zumpy 2.72 - 1.70 = 1.02 m
+
+  - platform: template
+    # Definujem max. kapacitu zumpy, aby fekalko vytiahol 10m³: 12m³
+    # Rozmer plnej zumpy: 300 cm * 234 cm * 170 cm
+    # Velkost plnej zumpy: 3 * 2.34 * 1.7 = 11.934 m³
+    # Vzdialenost senzoru od dna (asi): 272 cm
+    lambda: return ((id(vyska_hladiny).state) * 3.0 * 2.34);
+    name: Množstvo splašiek
+    unit_of_measurement: m³
+    device_class: volume
+    icon: mdi:tanker-truck
+    accuracy_decimals: 1
+    update_interval: 60s
+    filters:
+      - delta : 0.01 # only send the result if the difference with the last sent result is higher than this
+
+  - platform: template
+  # Definujem max. kapacitu zumpy, aby fekalko vytiahol 10m³: 12m³
+    # Rozmer plnej zumpy: 300 cm * 234 cm * 170 cm
+    # Velkost plnej zumpy: 3 * 2.34 * 1.6 = 11.934 m³
+    # Vzdialenost senzoru od dna (asi): 272 cm
+    lambda: return (((id(vyska_hladiny).state) * 3.0 * 2.34) / 11.934 * 100);
+    name: Objem
+    unit_of_measurement: "%"
+    device_class: volume
+    icon: mdi:tanker-truck
+    accuracy_decimals: 0
+    update_interval: 60s
+    filters:
+      - delta : 0.1 # only send the result if the difference with the last sent result is higher than this

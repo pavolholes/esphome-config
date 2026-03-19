@@ -1,0 +1,204 @@
+# CHANGES
+# 0.8 2024-09-20
+#   - change [pwm_pin] from GPIO5 to GPIO19 because GPIO5 is a strapping pin
+#   - removed elektromer
+# 0.7 2024-02-05
+#   - [binary_sensor] > [majak_blikanie] > [filters] > Added [delayed_on: 1s]
+
+substitutions:
+  device_name: brana
+  friendly_name: Brana
+  room: Dvor
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.8"
+  device_type: ESP32 Wroom
+  
+  button_pin: GPIO14
+  button_pullup: INPUT_PULLUP
+  button_inverted: "True"
+  
+  reed_switch_ludia_pin: GPIO26
+  reed_switch_ludia_pullup: INPUT_PULLUP
+  reed_switch_ludia_inverted: "False" # "True"
+
+  # LED pasik
+  pwm_pin: GPIO19
+  
+  # majak
+  pwm2_pin: GPIO18
+  majak_timer: 60s
+  
+  # elektromer_pulsemeter_pin: GPIO23
+
+  plynomer_pulsemeter_pin: GPIO27
+  
+  relay_pin_ludia: GPIO33
+
+  # brana ovladanie config
+  brana_ovladanie_duration: 18000ms
+  brana_ovladanie_duration_int: "18000"
+  brana_ovladanie_relay_pin_auto: GPIO32 # gpio pin that trigger the door opening/closing/stop
+  brana_ovladanie_relay_active_duration: 400ms # amount of time relay is closed
+  brana_ovladanie_reed_switch_pin_auto: GPIO25 # gpio pin for close reed switch
+  brana_ovladanie_reed_switch_invered_auto: "True"
+  brana_ovladanie_reed_switch_pullup_auto: INPUT_PULLUP
+  brana_ovladanie_reed_switch_debounce_time: 500ms # debounce time for the reed switch
+
+  # i2c_sda: GPIO21
+  # i2c_scl: GPIO22
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  common: !include pavolholes_common/common.yaml
+  # debug: !include pavolholes_common/debug.yaml
+  # web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
+  esp32: !include pavolholes_common/esp32.yaml
+  brana-ovladanie: !include pavolholes_common/brana-ovladanie.yaml
+  # elektromer: !include pavolholes_common/elektromer.yaml
+  esp32BluetoothProxy: !include pavolholes_common/esp32BluetoothProxy.yaml # including this changes the framework so the first time it have to be loaded to ESP using USB cable, not OTA!
+  plynomer: !include pavolholes_common/plynomer.yaml
+  vitara: !include
+    file: pavolholes_common/esp32_ble_tracker.yaml
+    vars:
+      ble_tracker_friendly_name: Vitara_iTag_XiaomiBle4
+      ble_tracker_name: vitara_itag
+      ble_tracker_MAC: FF:FF:11:95:FC:EE
+  kalos: !include
+    file: pavolholes_common/esp32_ble_tracker.yaml
+    vars:
+      ble_tracker_friendly_name: Kalos_iTag_XiaomiBle5
+      ble_tracker_name: kalos_itag
+      ble_tracker_MAC: FF:FF:11:D5:6B:AD
+
+output:
+  - platform: ledc
+    id: output_pwm
+    pin: ${pwm_pin}
+
+  - platform: ledc
+    id: output2_pwm
+    pin: ${pwm2_pin}
+
+light:
+  - platform: monochromatic
+    name: LED
+    icon: mdi:led-strip-variant
+    id: light_pwm
+    output: output_pwm
+    restore_mode: ALWAYS_OFF #RESTORE_DEFAULT_OFF
+    gamma_correct: 1.0 # to start brightness at 0.01 not at 0.18
+
+  - platform: monochromatic
+    name: Majak
+    icon: mdi:alarm-light-outline
+    id: light2_pwm
+    output: output2_pwm
+    restore_mode: ALWAYS_OFF #RESTORE_DEFAULT_OFF
+    gamma_correct: 1.0 # to start brightness at 0.01 not at 0.18
+    default_transition_length: 0s
+    effects:
+      - pulse:
+          name: Fast Pulse
+          transition_length: 0s
+          update_interval: 0.5s
+
+switch:
+  - platform: gpio
+    name: Ludia Zamok
+    # internal: true
+    id: relay_ludia
+    device_class: switch
+    icon: mdi:door
+    pin: ${relay_pin_ludia}
+    # restore_mode: RESTORE_INVERTED_DEFAULT_OFF
+    inverted: true
+    on_turn_on:
+      then:
+        - delay: 10s
+        - switch.turn_off: relay_ludia
+
+binary_sensor:
+  - platform: gpio
+    id: wall_button
+    # name: Auto Tlacidlo
+    # icon: mdi:garage-lock
+    # device_class: garage_door
+    internal: True
+    pin:
+      number: ${button_pin}
+      # Pullup means it's switching ground (that's why it's inverted as well).
+      mode: ${button_pullup}
+      inverted: ${button_inverted}
+    filters:
+      # - delayed_on: 50ms
+      - delayed_on_off: 30ms
+      # - invert:
+    on_press: 
+      then:
+        - switch.turn_on: garage_control
+
+  - platform: gpio
+    name: Ludia Kontakt
+    icon: mdi:door-sliding
+    device_class: door
+    pin:
+      number: ${reed_switch_ludia_pin}
+      inverted: ${reed_switch_ludia_inverted}
+      mode: ${reed_switch_ludia_pullup}
+    on_press:
+      - light.turn_off:
+          id: light2_pwm
+
+  # # NOT WORKING Template binary_sensor for turning off the light after set amount of time.
+  # - platform: template
+  #   lambda: return light.light2_pwm.on_state;
+  #   # lambda: 'return id(light2_pwm).current_values.is_on();'
+  #   id: majak_vypnutie
+  #   internal: True
+  #   filters:
+  #     - delayed_off: ${majak_timer}
+  #   on_press:
+  #     - logger.log:
+  #         format: "[Majak] Timer START"
+  #         level: INFO      
+  #   on_release:
+  #     - if: 
+  #         condition:
+  #           - light.is_on: light2_pwm
+  #         then:
+  #           - logger.log:
+  #               format: "[Majak] Timer STOP"
+  #               level: INFO
+  #           - light.turn_off:
+  #               id: light2_pwm
+
+  # Template binary_sensor for turning on the light when the cover is opening and turning it off 60 seconds later
+  - platform: template
+    id: majak_blikanie
+    lambda: |-
+      if (id(door_state) == 3) { // 0=STOPPED, 1=OPENED, 2=CLOSED, 3=OPENING, 4=CLOSING
+        return true;
+      } else {
+        return false;
+      }
+    internal: True
+    filters:
+      - delayed_on: 1s
+      - delayed_off: ${majak_timer}
+    on_press:
+      - logger.log:
+          format: "[Majak] Blikanie start, lebo brana sa otvara..."
+          level: INFO
+      - light.turn_on:
+          id: light2_pwm
+          effect: "Fast Pulse"
+    on_release: # filters: delayed_off is applied
+      - if: 
+          condition:
+            - light.is_on: light2_pwm
+          then:
+            - logger.log:
+                format: "[Majak] Blikanie stop, lebo ubehol timer."
+                level: INFO
+            - light.turn_off:
+                id: light2_pwm

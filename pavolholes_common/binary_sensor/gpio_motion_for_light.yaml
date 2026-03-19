@@ -1,0 +1,65 @@
+binary_sensor:
+  # GPIO binary_sensor (input) for motion sensor.
+  - platform: gpio
+    pin: ${motion_pin}
+    id: binary_sensor_motion
+    device_class: motion
+    name: Motion
+    filters:
+      - invert:
+    on_press:
+      then:
+        - if:
+            condition:
+              - binary_sensor.is_on: timer
+              - light.is_on: light_pwm
+            then:
+              - logger.log:
+                  format: "[${friendly_name} Motion] Motion detected, but timer is already running and light is ON so do nothing."
+                  level: INFO
+            else:
+              - logger.log:
+                  format: "[${friendly_name} Motion] Motion detected and timer is off..."
+                  level: INFO
+              - if:
+                  condition:
+                    - sun.is_above_horizon:
+                  then:
+                    - logger.log:
+                        format: "[${friendly_name} Motion] ... and sun is above horizon, setting brightness to 1.00."
+                        level: INFO
+                    - light.turn_on:
+                        id: light_pwm
+                        brightness: 1.00
+                  else:
+                    - logger.log:
+                        format: "[${friendly_name} Motion] ... and sun is below horizon..."
+                        level: INFO
+                    - light.turn_on:
+                        id: light_pwm
+                        brightness: !lambda |-
+                          if (id(sntp_time).now().hour == 19) {
+                            ESP_LOGI("main", "[${friendly_name} Motion] ... and it's between 19:00:00 and 19:59:59, setting brightness to ${light_eveningBrightnessLevel}.");
+                            return ${light_eveningBrightnessLevel};
+                          } else if (id(sntp_time).now().hour < 7 || id(sntp_time).now().hour >= 20) {
+                            ESP_LOGI("main", "[${friendly_name} Motion] ... and it's less then 7:00:00 or more than 19:59:59 setting brightness to ${light_nightBrightnessLevel}.");
+                            return ${light_nightBrightnessLevel};
+                          } else {
+                            ESP_LOGI("main", "[${friendly_name} Motion] ... and no specific time condition was met, setting brightness to 1.00.");
+                            return 1.00;
+                          }
+
+  # Template binary_sensor for turning off the light after set amount of time.
+  - platform: template
+    lambda: 'return id(binary_sensor_motion).state;'
+    id: timer
+    internal: True
+    filters:
+      - delayed_off: ${motion_timer}
+    on_release:
+      - logger.log:
+          format: "[${friendly_name} Timer] Motion not detected anymore, turn off LED."
+          level: INFO
+      - light.turn_off:
+          id: light_pwm
+          transition_length: 15s

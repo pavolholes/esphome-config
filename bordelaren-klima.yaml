@@ -1,0 +1,57 @@
+# CHANGES
+# 0.1 2025-05-29 Pavol
+#   - initial version
+
+substitutions:
+  device_name: bordelaren-klima
+  friendly_name: Bordelaren Klima
+  room: Pracovna
+  project_name: pavolholes.${friendly_name}
+  project_version: "0.1"
+  device_type: ESP32 WROOM
+
+  # LG Klima
+  temperature_sensor_entity_id: sensor.bordelaren_multisenzor_temperature
+
+  # I2C: BME280 (H&T&P), BH1750 (lux)
+  i2c_sda: GPIO22
+  i2c_scl: GPIO21
+
+  # UART: LD2410
+  uart_ld2410_tx: GPIO17 # RX
+  uart_ld2410_rx: GPIO16 # TX
+
+packages:
+  # higher in the list is higher priority (can overwrite values from includes below)
+  common: !include pavolholes_common/common.yaml
+  esp32: !include pavolholes_common/esp32.yaml
+  # debug: !include pavolholes_common/debug.yaml
+  esp32BluetoothProxy: !include pavolholes_common/esp32BluetoothProxy.yaml # including this changes the framework so the first time it have to be loaded to ESP using USB cable, not OTA!
+  lg_airconditioner: !include pavolholes_common/lg_airconditioner.yaml
+  bh1750: !include pavolholes_common/sensor/bh1750.yaml
+  bme280: !include pavolholes_common/sensor/bme280.yaml
+  ld2410: !include pavolholes_common/sensor/ld2410.yaml
+
+logger:
+  level: DEBUG  # (default is DEBUG; another option is VERY_VERBOSE)
+  logs:
+    json: INFO
+    sensor: INFO
+    sensor.filter: INFO
+    adc: INFO
+    ntc: INFO
+    resistance: INFO
+    text_sensor: INFO
+    api: INFO
+    api.service: INFO
+    api.connection: INFO
+    ledc: INFO
+    internal_temperature: INFO
+    esp32.preferences: INFO
+    esp32_ble_tracker: INFO
+    esp32_ble: INFO
+    bluetooth_proxy: INFO
+    i2c: INFO
+    i2c.idf: INFO
+    ld2410: INFO
+    bh1750.sensor: INFO

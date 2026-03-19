@@ -1,0 +1,72 @@
+substitutions:
+  common_deviceSpecific_comment: "powermeter_sml v0.1"
+  powermeter_sml_uart_rx: RX
+  powermeter_sml_uart_tx: TX
+
+# CHANGES
+# v0.1
+#   - initial version 
+
+# DOCUMENTATION
+# https://esphome.io/components/sml.html
+# https://community.home-assistant.io/t/esp01s-ir-reading-head-for-german-electricity-meter-smart-meter-itron-with-esphome/526554
+# https://tasmota.github.io/docs/Smart-Meter-Interface/#general-description
+# https://github.com/alengwenus/esphome_components/blob/main/components/sml/README.md
+# https://esphome.io/components/uart#uart
+
+# logger:
+#   baud_rate: 0 # disable logging to serial console because serial port (UART) is used to communicate with dimmer module
+
+# external_components:
+#   - source: github://alengwenus/esphome_components@main
+#     refresh: 0s
+#     components: [sml]
+
+uart:
+  - id: uart_powermeter_sml
+    tx_pin: ${powermeter_sml_uart_tx}
+    rx_pin: ${powermeter_sml_uart_rx}
+    baud_rate: 9600
+    data_bits: 8
+    parity: NONE
+    stop_bits: 1
+    debug:
+      direction: BOTH
+      dummy_receiver: false
+      after:
+        delimiter: "\n"
+      sequence:
+        - lambda: UARTDebug::log_string(direction, bytes);
+
+sml:
+  id: mysml
+  uart_id: uart_powermeter_sml
+  on_data:
+    - lambda: !lambda |-
+        if (valid) {
+          // id(mqttclient).publish("gridmeter/sensor/sml/state", format_hex(bytes));
+          ESP_LOGI("main", "[${friendly_name} PowerMeter SML] State: [%.2f]", format_hex(bytes));
+        } else {
+          ESP_LOGI("main", "[${friendly_name} PowerMeter SML] Error: [%.2f]", format_hex(bytes));
+        }
+
+# sensor:
+#   - platform: sml
+#     name: Total energy
+#     sml_id: mysml
+#     server_id: "0123456789abcdef"
+#     obis_code: "1-0:1.8.0"
+#     unit_of_measurement: kWh
+#     accuracy_decimals: 1
+#     device_class: energy
+#     state_class: total_increasing
+#     filters:
+#       - multiply: 0.0001
+
+# text_sensor:
+#   - platform: sml
+#     name: Manufacturer
+#     sml_id: mysml
+#     server_id: "0123456789abcdef"
+#     obis_code: "129-129:199.130.3"
+#     format: text

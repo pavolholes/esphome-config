@@ -1,0 +1,129 @@
+substitutions:
+  common_comment: Common v0.10
+
+# changes tracking
+# v0.10 2024-09-30
+#   - changed "uptime_seconds" to "uptime_timestamp"
+# v0.9 2024-01-12
+#   - added (dis)connection logging to API and WIFI
+# v0.8 2023-12-07
+#   - added "area" to "esphome"
+# v0.7 2023-08-04
+#   - removed BSSID; it's not used for anything yet, it's only increasing database size
+#   - removed text sensor: "uptime_sensor" because it's spamming the history log
+# v0.6 2023-03-05
+#   - added "reboot_timeout" to "api" and "ota"
+# v0.5 2023-02-15
+#   - added "friendly_name" to "esphome"
+
+# DOCUMENTATION
+# Includes, packages:
+#   - https://esphome.io/guides/configuration-types#packages
+#   - https://esphome.io/guides/faq.html#tips-for-using-esphome
+
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  # area: ${room}
+  comment: ${device_type} | ${common_deviceSpecific_comment} | ${common_comment}
+  project:
+    name: ${project_name}
+    version: ${project_version}
+
+wifi:
+  fast_connect: true
+  ssid: !secret wifi_not_ssid
+  password: !secret wifi_not_password
+  # power_save_mode: none
+  # power_save_mode: HIGH # for ESP8266 LOW/HIGH are mixed up, esphome/issues/issues/1532
+  reboot_timeout: 1h
+  # captive_portal:
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: AP
+    password: !secret wifi_not_password
+  on_connect:
+    then:
+      - logger.log:
+          format: "[WIFI] Connected to wifi."
+          level: INFO
+  on_disconnect:
+    then:
+      - logger.log:
+          format: "[WIFI] Disconneted from wifi."
+          level: WARN
+
+# Enable Home Assistant API
+api:
+  reboot_timeout: 1h
+  encryption: 
+    key: !secret api_encryption_key
+  on_client_connected:
+    - logger.log:
+        format: "[API] Client [%s] connected to API with IP [%s]"
+        level: INFO
+        args: ["client_info.c_str()", "client_address.c_str()"]
+  on_client_disconnected:
+    - logger.log:
+        format: "API client disconnected!"
+        level: WARN
+
+ota:
+  - platform: esphome
+    password: !secret api_ota_password
+    
+safe_mode:
+  num_attempts: 5
+  reboot_timeout: 10min
+
+time:
+  # Sync RTC time with NTP server
+  - platform: sntp
+    id: sntp_time
+    servers: 192.168.2.20
+  # Sync RTC time with HA
+  # - platform: homeassistant
+  #   id: homeassistant_time
+
+sun:
+  latitude: !secret latitude
+  longitude: !secret longitude
+
+# Enable logging
+logger:
+  level: INFO # (default is DEBUG)
+
+text_sensor:
+  # Sensor with esphome version and fw build time
+  - platform: version
+    name: Version
+  
+  # Extra wifi info from device
+  - platform: wifi_info
+    ip_address:
+      name: IP
+    ssid:
+      name: SSID
+    # bssid:
+      # name: BSSID
+
+  # # Uptime text sensor which is updated by the sensor id: uptime_sensor
+  # - platform: template
+  #   name: Uptime
+  #   id: uptime_human
+  #   icon: mdi:clock-start
+
+binary_sensor:
+  - <<: !include binary_sensor/status.yaml
+
+sensor:
+  - <<: !include sensor/wifi-signal.yaml
+  - <<: !include sensor/uptime_timestamp.yaml
+  # - <<: !include sensor/uptime_seconds.yaml
+  # - <<: !include sensor/uptime_sensor.yaml
+
+button:
+  - platform: restart
+    name: Restart
+
