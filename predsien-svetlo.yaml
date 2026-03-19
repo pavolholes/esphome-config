@@ -8,8 +8,8 @@ substitutions:
   button_pin: "GPIO12"
   max_power: "220.0" # watt
   max_temp: "70.0" # °C
-  light_nightBrightnessLevel: "0.01"
-  light_eveningBrightnessLevel: "0.20"
+  light_nightBrightnessLevel: "1.0"
+  light_eveningBrightnessLevel: "1.0"
   light_fadingStep: "0.05"
 
 packages:
