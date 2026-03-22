@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Zahrada Nadrz
   room: Zahrada
   project_name: pavolholes.${friendly_name}
-  project_version: "0.5"
+  project_version: "0.6"
   device_type: ESP32 WROOM-32
 
   i2c_sda: GPIO21
@@ -106,18 +106,18 @@ sensor:
     icon: mdi:water-pump
     update_interval: 5s
     filters:
+      # Kalibrované: 55L skutočnosť = 70L namerané → 344 pulzov/liter
       # Model: FS400A 1"
       # 1L = 5,5 * Q source: https://allegro.sk/ponuka/prietokomer-snimac-prietoku-vody-14129920577
       # asi ten isty produkt na Aliexpresse tvrdi, ze f = 4,5 * Q cize 270 pulzov na liter vody
-      #- lambda: return (x / 5.5 / 60); # F(Hz)=(5,5*Q) -> F=x -> x=5,5*Q -> Q=x/5,5 -> that's per second so devide with 60 to get per minute
-      - lambda: return (x / 270);
+      - lambda: return (x / 344);
     total:
       unit_of_measurement: L
       name: Cerpadlo Total
       icon: mdi:water-pump
       accuracy_decimals: 2
       filters:
-        - lambda: return (x / 270);
+        - lambda: return (x / 344);
 
   - platform: pulse_counter
     pin: ${studna_prietok_pin}
@@ -127,16 +127,18 @@ sensor:
     icon: mdi:water-well-outline
     update_interval: 5s
     filters:
-      # 1L = 300Hz F=5*Q source: https://www.aliexpress.com/i/4001076782927.html
-      - lambda: return (x / 420); 
-      # - lambda: return (x+8)/6/60; #Flow pulse: F=(6*Q-8)±3% with Q=L/min > F=x -> x=6*Q-8 -> x+8=6*Q -> (x+8)/6=Q -> Q=(x+8)/6 > -> that's per second so devide with 60 to get per minute
+      # Kalibrované: 55L skutočnosť = 70L namerané → 344 pulzov/liter
+      # Model: FS400A 1"
+      # 1L = 5,5 * Q source: https://allegro.sk/ponuka/prietokomer-snimac-prietoku-vody-14129920577
+      # asi ten isty produkt na Aliexpresse tvrdi, ze f = 4,5 * Q cize 270 pulzov na liter vody
+      - lambda: return (x / 344);
     total:
       unit_of_measurement: L
       name: Studna Total
       icon: mdi:water-well-outline
       accuracy_decimals: 2
       filters:
-        - lambda: return (x / 420);
+        - lambda: return (x / 344);
 
   - platform: adc
     pin: ${adc_pin}
