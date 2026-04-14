@@ -108,7 +108,7 @@ binary_sensor:
     on_state: 
       then:
         - lambda: |-
-            ESP_LOGI("ld2410", "[LD2410 Still Target Custom] Presence changed to [%s]. Still energy: [%.0f]. Thresold: [%.0f]", id(ld2410_still_target_custom).state ? "ON" : "OFF", id(ld2410_still_energy).state, id(number_still_energy_threshold).state);
+            ESP_LOGI("ld2410", "[LD2410 Still Target Custom] Presence changed to [%s]. Still energy: [%.0f]. Thresold: [%.0f]", id(ld2410_still_target).state ? "ON" : "OFF", id(ld2410_still_energy).state, id(number_still_energy_threshold).state);
     lambda: |-
       if ((id(ld2410_still_energy).state > id(number_still_energy_threshold).state) ) {
         return true;
@@ -139,7 +139,7 @@ binary_sensor:
             id(ld2410_presence_custom_change_reason).publish_state(vText);
             ESP_LOGI("ld2410", "[LD2410 Presence Custom] %s", vText.c_str());
     lambda: |-
-      if (id(ld2410_still_target_custom).state || id(ld2410_move_energy).state > id(number_move_energy_threshold).state ) {
+      if (id(ld2410_still_target).state || id(ld2410_move_energy).state > id(number_move_energy_threshold).state ) {
         return true;
       } else {
         return false;
