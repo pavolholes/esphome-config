@@ -135,7 +135,7 @@ binary_sensor:
       then:
         - lambda: |-
             // ESP_LOGI("ld2410", "[LD2410 Presence Custom] Presence changed to [%s]. Still energy: [%.0f], Move energy: [%.0f].", id(ld2410_presence_custom).state ? "ON" : "OFF", id(ld2410_still_energy).state, id(ld2410_move_energy).state);
-            std::string vText = "Presence changed to [" + to_string(id(ld2410_presence_custom).state ? "ON" : "OFF") + "]. Still energy: [" + to_string((int)id(ld2410_still_energy).state) + "], Move energy: [" + to_string((int)id(ld2410_move_energy).state) + "].";
+            std::string vText = "Presence changed to [" + std::string(id(ld2410_presence_custom).state ? "ON" : "OFF") + "]. Still energy: [" + to_string((int)id(ld2410_still_energy).state) + "], Move energy: [" + to_string((int)id(ld2410_move_energy).state) + "].";
             id(ld2410_presence_custom_change_reason).publish_state(vText);
             ESP_LOGI("ld2410", "[LD2410 Presence Custom] %s", vText.c_str());
     lambda: |-
