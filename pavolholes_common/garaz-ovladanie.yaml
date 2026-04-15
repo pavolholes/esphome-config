@@ -1,0 +1,72 @@
+# https://esphome.io/components/cover/endstop/
+
+substitutions:
+  garaz_ovladanie_relay_pin_auto: GPIO10 # gpio pin that trigger the door opening/closing/stop
+  garaz_ovladanie_relay_active_duration: 400ms # amount of time relay is closed
+  garaz_ovladanie_close_duration: 19s
+  garaz_ovladanie_close_endstop_pin: GPIO20 # gpio pin for close reed switch
+  garaz_ovladanie_close_endstop_invered: "True"
+  garaz_ovladanie_close_endstop_pullup: INPUT_PULLUP
+  garaz_ovladanie_open_duration: 13s
+  garaz_ovladanie_open_endstop_pin: GPIO21 # gpio pin for close reed switch
+  garaz_ovladanie_open_endstop_invered: "True"
+  garaz_ovladanie_open_endstop_pullup: INPUT_PULLUP
+  garaz_ovladanie_reed_switch_debounce_time: 500ms # debounce time for the reed switch
+
+cover:
+  - platform: endstop
+    name: Ovladanie
+    id: garaz_cover
+    device_class: garage
+    open_action:
+      - switch.turn_on: garaz_switch
+    open_duration: $garaz_ovladanie_open_duration
+    open_endstop: garage_open_endstop_binary_sensor
+    close_action:
+      - switch.turn_on: garaz_switch
+    close_duration: $garaz_ovladanie_close_duration
+    close_endstop: garage_close_endstop_binary_sensor
+    stop_action:
+      - switch.turn_off: garaz_switch
+
+binary_sensor:
+  # Reed switch - garáž ZATVORENÁ
+  - platform: gpio
+    internal: True
+    pin:
+      number: $garaz_ovladanie_close_endstop_pin
+      mode: $garaz_ovladanie_close_endstop_pullup
+      inverted: $garaz_ovladanie_close_endstop_invered
+    id: garage_close_endstop_binary_sensor
+    filters:
+      - delayed_on_off: $garaz_ovladanie_reed_switch_debounce_time
+
+  # Reed switch - garáž OTVORENÁ
+  - platform: gpio
+    internal: True
+    pin:
+      number: $garaz_ovladanie_open_endstop_pin
+      mode: $garaz_ovladanie_open_endstop_pullup
+      inverted: $garaz_ovladanie_open_endstop_invered
+    id: garage_open_endstop_binary_sensor
+    filters:
+      - delayed_on_off: $garaz_ovladanie_reed_switch_debounce_time
+
+switch:
+  - platform: gpio
+    internal: True
+    # name: Rele
+    id: garaz_switch
+    # device_class: switch
+    # icon: mdi:gate
+    pin:
+      number: $garaz_ovladanie_relay_pin_auto
+      inverted: True
+      mode:
+        output: true
+        open_drain: true
+    restore_mode: ALWAYS_OFF #RESTORE_INVERTED_DEFAULT_OFF
+    on_turn_on: 
+      then:
+        - delay: $garaz_ovladanie_relay_active_duration
+        - switch.turn_off: garaz_switch
