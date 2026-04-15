@@ -1,7 +1,9 @@
 substitutions:
-  common_comment: Common v0.10
+  common_comment: Common v0.11
 
 # changes tracking
+# v0.11 2026-04-15
+#   - rename SSID of fallback AP
 # v0.10 2024-09-30
 #   - changed "uptime_seconds" to "uptime_timestamp"
 # v0.9 2024-01-12
@@ -41,7 +43,7 @@ wifi:
   # captive_portal:
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
-    ssid: AP
+    ssid: ${friendly_name} Fallback AP
     password: !secret wifi_not_password
   on_connect:
     then:
