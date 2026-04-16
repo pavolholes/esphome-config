@@ -1,7 +1,9 @@
 substitutions:
-  common_comment: Common v0.11
+  common_comment: Common v0.12
 
 # changes tracking
+# v0.12 2026-04-15
+#   - added "min_auth_mode: WPA2" to "ap"
 # v0.11 2026-04-15
 #   - rename SSID of fallback AP
 # v0.10 2024-09-30
@@ -45,6 +47,7 @@ wifi:
   ap:
     ssid: ${friendly_name} Fallback AP
     password: !secret wifi_not_password
+  min_auth_mode: WPA2
   on_connect:
     then:
       - logger.log:
