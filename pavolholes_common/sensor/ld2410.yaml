@@ -1,9 +1,14 @@
 substitutions:
-  common_deviceSpecific_comment: "ld2410 v0.3.1"
+  common_deviceSpecific_comment: "ld2410 v0.3.2"
   uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
 # CHANGES
+# v0.3.2 Pavol Holes 2026-04-19
+#   - [binary_sensor > ld2410_presence_custom > lambda] modified to require BOTH internal still_target AND still_energy > threshold for still detection
+#     This prevents false positives when still_energy is at maximum (100) but internal still_target is OFF (filtered by gates)
+#   - [binary_sensor > ld2410_still_target_custom > lambda] modified to match presence_custom logic for consistency
+#     Now requires BOTH internal still_target AND still_energy > threshold instead of just still_energy > threshold
 # v0.3.1 Pavol Holes 2025-05-27
 #   - [button > template > calibrate_ld2410] fixed logging
 # v0.3.0 Pavol Holes 2025-05-14
@@ -110,7 +115,9 @@ binary_sensor:
         - lambda: |-
             ESP_LOGI("ld2410", "[LD2410 Still Target Custom] Presence changed to [%s]. Still energy: [%.0f]. Thresold: [%.0f]", id(ld2410_still_target).state ? "ON" : "OFF", id(ld2410_still_energy).state, id(number_still_energy_threshold).state);
     lambda: |-
-      if ((id(ld2410_still_energy).state > id(number_still_energy_threshold).state) ) {
+      // Combined technique: Require BOTH internal still_target AND still_energy > threshold
+      // This prevents false positives when still_energy is 100 but internal still_target is OFF (filtered by gates)
+      if (id(ld2410_still_target).state && (id(ld2410_still_energy).state > id(number_still_energy_threshold).state)) {
         return true;
       } else {
         return false;
@@ -139,7 +146,12 @@ binary_sensor:
             id(ld2410_presence_custom_change_reason).publish_state(vText);
             ESP_LOGI("ld2410", "[LD2410 Presence Custom] %s", vText.c_str());
     lambda: |-
-      if (id(ld2410_still_target).state || id(ld2410_move_energy).state > id(number_move_energy_threshold).state ) {
+      // Combined technique: For still detection, require BOTH internal still target AND still energy threshold
+      // This prevents false positives when still energy is 100 but internal still target is OFF (filtered by gates)
+      bool still_detected = id(ld2410_still_target).state && (id(ld2410_still_energy).state > id(number_still_energy_threshold).state);
+      bool move_detected = id(ld2410_move_energy).state > id(number_move_energy_threshold).state;
+      
+      if (still_detected || move_detected) {
         return true;
       } else {
         return false;
