@@ -1,9 +1,16 @@
 substitutions:
-  common_deviceSpecific_comment: "ld2410 v0.3.2"
+  common_deviceSpecific_comment: "ld2410 v0.3.3"
   uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
 # CHANGES
+# v0.3.3 Pavol Holes 2026-04-20
+#   - [binary_sensor > ld2410_presence_custom_gates] added new gate-based presence sensor
+#     Uses direct gate energy/threshold comparison instead of internal LD2410 targets
+#     Requires at least 2 gates to exceed thresholds simultaneously to filter erratic spikes
+#     Skips g0 for move detection and g0-g1 for still detection (most prone to hardware noise)
+#   - [sensor > ld2410 > g0-g8 > move/still_energy] added explicit IDs for gate energy sensors
+#   - [number > ld2410 > g0-g8 > move/still_threshold] added explicit IDs for gate threshold numbers
 # v0.3.2 Pavol Holes 2026-04-19
 #   - [binary_sensor > ld2410_presence_custom > lambda] modified to require BOTH internal still_target AND still_energy > threshold for still detection
 #     This prevents false positives when still_energy is at maximum (100) but internal still_target is OFF (filtered by gates)
@@ -147,7 +154,7 @@ binary_sensor:
             ESP_LOGI("ld2410", "[LD2410 Presence Custom] %s", vText.c_str());
     lambda: |-
       // Combined technique: For still detection, require BOTH internal still target AND still energy threshold
-      // This prevents false positives when still energy is 100 but internal still target is OFF (filtered by gates)
+      // This prevents false positives when still_energy is 100 but internal still_target is OFF (filtered by gates)
       bool still_detected = id(ld2410_still_target).state && (id(ld2410_still_energy).state > id(number_still_energy_threshold).state);
       bool move_detected = id(ld2410_move_energy).state > id(number_move_energy_threshold).state;
       
@@ -163,6 +170,53 @@ binary_sensor:
           return id(number_presence_delayed_on).state * 1000.0;
       # delayed_off prevents false negatives
       # template in miliseconds so we need to multiple with 1000
+      - delayed_off: !lambda |-
+          return id(number_presence_delayed_off).state * 1000.0;
+
+  - platform: template
+    id: ld2410_presence_custom_gates
+    name: LD2410 Presence Custom Gates
+    icon: mdi:account-multiple
+    device_class: occupancy
+    # update_interval: 10s
+    on_state: 
+      then:
+        - lambda: |-
+            std::string vText = "Gates Presence changed to [" + std::string(id(ld2410_presence_custom_gates).state ? "ON" : "OFF") + "].";
+            ESP_LOGI("ld2410", "[LD2410 Presence Custom Gates] %s", vText.c_str());
+    lambda: |-
+      // Gate-based detection: Requires multiple gates to exceed thresholds simultaneously
+      // This filters out erratic spikes in individual gates caused by hardware issues
+      int gates_above_threshold = 0;
+      
+      // Check move gates (g1-g8, skip g0 as it's most prone to noise)
+      if (id(ld2410_g1_move_energy).state > id(number_ld2410_g1_move_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g2_move_energy).state > id(number_ld2410_g2_move_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g3_move_energy).state > id(number_ld2410_g3_move_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g4_move_energy).state > id(number_ld2410_g4_move_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g5_move_energy).state > id(number_ld2410_g5_move_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g6_move_energy).state > id(number_ld2410_g6_move_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g7_move_energy).state > id(number_ld2410_g7_move_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g8_move_energy).state > id(number_ld2410_g8_move_threshold).state) gates_above_threshold++;
+      
+      // Check still gates (g2-g8, skip g0-g1 as they're closest to sensor and prone to noise)
+      if (id(ld2410_g2_still_energy).state > id(number_ld2410_g2_still_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g3_still_energy).state > id(number_ld2410_g3_still_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g4_still_energy).state > id(number_ld2410_g4_still_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g5_still_energy).state > id(number_ld2410_g5_still_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g6_still_energy).state > id(number_ld2410_g6_still_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g7_still_energy).state > id(number_ld2410_g7_still_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g8_still_energy).state > id(number_ld2410_g8_still_threshold).state) gates_above_threshold++;
+      
+      // Require at least 2 gates to be above threshold to filter out erratic spikes
+      if (gates_above_threshold >= 2) {
+        return true;
+      } else {
+        return false;
+      }
+    filters:
+      - delayed_on: !lambda |-
+          return id(number_presence_delayed_on).state * 1000.0;
       - delayed_off: !lambda |-
           return id(number_presence_delayed_off).state * 1000.0;
 
@@ -185,48 +239,66 @@ sensor:
     g0:
       move_energy:
         name: LD2410 g0 Move Energy
+        id: ld2410_g0_move_energy
       still_energy:
         name: LD2410 g0 Still Energy
+        id: ld2410_g0_still_energy
     g1:
       move_energy:
         name: LD2410 g1 Move Energy
+        id: ld2410_g1_move_energy
       still_energy:
         name: LD2410 g1 Still Energy
+        id: ld2410_g1_still_energy
     g2:
       move_energy:
         name: LD2410 g2 Move Energy
+        id: ld2410_g2_move_energy
       still_energy:
         name: LD2410 g2 Still Energy
+        id: ld2410_g2_still_energy
     g3:
       move_energy:
         name: LD2410 g3 Move Energy
+        id: ld2410_g3_move_energy
       still_energy:
         name: LD2410 g3 Still Energy
+        id: ld2410_g3_still_energy
     g4:
       move_energy:
         name: LD2410 g4 Move Energy
+        id: ld2410_g4_move_energy
       still_energy:
         name: LD2410 g4 Still Energy
+        id: ld2410_g4_still_energy
     g5:
       move_energy:
         name: LD2410 g5 Move Energy
+        id: ld2410_g5_move_energy
       still_energy:
         name: LD2410 g5 Still Energy
+        id: ld2410_g5_still_energy
     g6:
       move_energy:
         name: LD2410 g6 Move Energy
+        id: ld2410_g6_move_energy
       still_energy:
         name: LD2410 g6 Still Energy
+        id: ld2410_g6_still_energy
     g7:
       move_energy:
         name: LD2410 g7 Move Energy
+        id: ld2410_g7_move_energy
       still_energy:
         name: LD2410 g7 Still Energy
+        id: ld2410_g7_still_energy
     g8:
       move_energy:
         name: LD2410 g8 Move Energy
+        id: ld2410_g8_move_energy
       still_energy:
         name: LD2410 g8 Still Energy
+        id: ld2410_g8_still_energy
 
 number:
   - platform: ld2410
@@ -241,48 +313,66 @@ number:
     g0:
       move_threshold:
         name: LD2410 g0 Move Threshold
+        id: number_ld2410_g0_move_threshold
       still_threshold:
         name: LD2410 g0 Still Threshold
+        id: number_ld2410_g0_still_threshold
     g1:
       move_threshold:
         name: LD2410 g1 Move Threshold
+        id: number_ld2410_g1_move_threshold
       still_threshold:
         name: LD2410 g1 Still Threshold
+        id: number_ld2410_g1_still_threshold
     g2:
       move_threshold:
         name: LD2410 g2 Move Threshold
+        id: number_ld2410_g2_move_threshold
       still_threshold:
         name: LD2410 g2 Still Threshold
+        id: number_ld2410_g2_still_threshold
     g3:
       move_threshold:
         name: LD2410 g3 Move Threshold
+        id: number_ld2410_g3_move_threshold
       still_threshold:
         name: LD2410 g3 Still Threshold
+        id: number_ld2410_g3_still_threshold
     g4:
       move_threshold:
         name: LD2410 g4 Move Threshold
+        id: number_ld2410_g4_move_threshold
       still_threshold:
         name: LD2410 g4 Still Threshold
+        id: number_ld2410_g4_still_threshold
     g5:
       move_threshold:
         name: LD2410 g5 Move Threshold
+        id: number_ld2410_g5_move_threshold
       still_threshold:
         name: LD2410 g5 Still Threshold
+        id: number_ld2410_g5_still_threshold
     g6:
       move_threshold:
         name: LD2410 g6 Move Threshold
+        id: number_ld2410_g6_move_threshold
       still_threshold:
         name: LD2410 g6 Still Threshold
+        id: number_ld2410_g6_still_threshold
     g7:
       move_threshold:
         name: LD2410 g7 Move Threshold
+        id: number_ld2410_g7_move_threshold
       still_threshold:
         name: LD2410 g7 Still Threshold
+        id: number_ld2410_g7_still_threshold
     g8:
       move_threshold:
         name: LD2410 g8 Move Threshold
+        id: number_ld2410_g8_move_threshold
       still_threshold:
         name: LD2410 g8 Still Threshold
+        id: number_ld2410_g8_still_threshold
 
   - platform: template
     id: number_still_energy_threshold
