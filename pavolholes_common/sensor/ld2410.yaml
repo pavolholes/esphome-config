@@ -1,9 +1,13 @@
 substitutions:
-  common_deviceSpecific_comment: "ld2410 v0.3.3"
+  common_deviceSpecific_comment: "ld2410 v0.3.4"
   uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
 # CHANGES
+# v0.3.4 Pavol Holes 2026-04-21
+#   - [binary_sensor > ld2410_presence_custom_gates > lambda] modified to require at least 1 move gate (g1-g8) AND 2 still gates (g2-g8)
+#     This prevents false positives from still-only triggers (hardware noise) while still detecting legitimate movement
+#     Previous version required only 2 gates total, which allowed false positives from still gates alone
 # v0.3.3 Pavol Holes 2026-04-20
 #   - [binary_sensor > ld2410_presence_custom_gates] added new gate-based presence sensor
 #     Uses direct gate energy/threshold comparison instead of internal LD2410 targets
@@ -185,31 +189,34 @@ binary_sensor:
             std::string vText = "Gates Presence changed to [" + std::string(id(ld2410_presence_custom_gates).state ? "ON" : "OFF") + "].";
             ESP_LOGI("ld2410", "[LD2410 Presence Custom Gates] %s", vText.c_str());
     lambda: |-
-      // Gate-based detection: Requires multiple gates to exceed thresholds simultaneously
-      // This filters out erratic spikes in individual gates caused by hardware issues
-      int gates_above_threshold = 0;
+      // Gate-based detection: Requires at least 1 move gate AND 2 still gates to exceed thresholds
+      // This prevents false positives from still-only triggers while still detecting legitimate movement
+      int move_gates_above_threshold = 0;
+      int still_gates_above_threshold = 0;
       
       // Check move gates (g1-g8, skip g0 as it's most prone to noise)
-      if (id(ld2410_g1_move_energy).state > id(number_ld2410_g1_move_threshold).state) gates_above_threshold++;
-      if (id(ld2410_g2_move_energy).state > id(number_ld2410_g2_move_threshold).state) gates_above_threshold++;
-      if (id(ld2410_g3_move_energy).state > id(number_ld2410_g3_move_threshold).state) gates_above_threshold++;
-      if (id(ld2410_g4_move_energy).state > id(number_ld2410_g4_move_threshold).state) gates_above_threshold++;
-      if (id(ld2410_g5_move_energy).state > id(number_ld2410_g5_move_threshold).state) gates_above_threshold++;
-      if (id(ld2410_g6_move_energy).state > id(number_ld2410_g6_move_threshold).state) gates_above_threshold++;
-      if (id(ld2410_g7_move_energy).state > id(number_ld2410_g7_move_threshold).state) gates_above_threshold++;
-      if (id(ld2410_g8_move_energy).state > id(number_ld2410_g8_move_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g1_move_energy).state > id(number_ld2410_g1_move_threshold).state) move_gates_above_threshold++;
+      if (id(ld2410_g2_move_energy).state > id(number_ld2410_g2_move_threshold).state) move_gates_above_threshold++;
+      if (id(ld2410_g3_move_energy).state > id(number_ld2410_g3_move_threshold).state) move_gates_above_threshold++;
+      if (id(ld2410_g4_move_energy).state > id(number_ld2410_g4_move_threshold).state) move_gates_above_threshold++;
+      if (id(ld2410_g5_move_energy).state > id(number_ld2410_g5_move_threshold).state) move_gates_above_threshold++;
+      if (id(ld2410_g6_move_energy).state > id(number_ld2410_g6_move_threshold).state) move_gates_above_threshold++;
+      if (id(ld2410_g7_move_energy).state > id(number_ld2410_g7_move_threshold).state) move_gates_above_threshold++;
+      if (id(ld2410_g8_move_energy).state > id(number_ld2410_g8_move_threshold).state) move_gates_above_threshold++;
       
       // Check still gates (g2-g8, skip g0-g1 as they're closest to sensor and prone to noise)
-      if (id(ld2410_g2_still_energy).state > id(number_ld2410_g2_still_threshold).state) gates_above_threshold++;
-      if (id(ld2410_g3_still_energy).state > id(number_ld2410_g3_still_threshold).state) gates_above_threshold++;
-      if (id(ld2410_g4_still_energy).state > id(number_ld2410_g4_still_threshold).state) gates_above_threshold++;
-      if (id(ld2410_g5_still_energy).state > id(number_ld2410_g5_still_threshold).state) gates_above_threshold++;
-      if (id(ld2410_g6_still_energy).state > id(number_ld2410_g6_still_threshold).state) gates_above_threshold++;
-      if (id(ld2410_g7_still_energy).state > id(number_ld2410_g7_still_threshold).state) gates_above_threshold++;
-      if (id(ld2410_g8_still_energy).state > id(number_ld2410_g8_still_threshold).state) gates_above_threshold++;
+      if (id(ld2410_g2_still_energy).state > id(number_ld2410_g2_still_threshold).state) still_gates_above_threshold++;
+      if (id(ld2410_g3_still_energy).state > id(number_ld2410_g3_still_threshold).state) still_gates_above_threshold++;
+      if (id(ld2410_g4_still_energy).state > id(number_ld2410_g4_still_threshold).state) still_gates_above_threshold++;
+      if (id(ld2410_g5_still_energy).state > id(number_ld2410_g5_still_threshold).state) still_gates_above_threshold++;
+      if (id(ld2410_g6_still_energy).state > id(number_ld2410_g6_still_threshold).state) still_gates_above_threshold++;
+      if (id(ld2410_g7_still_energy).state > id(number_ld2410_g7_still_threshold).state) still_gates_above_threshold++;
+      if (id(ld2410_g8_still_energy).state > id(number_ld2410_g8_still_threshold).state) still_gates_above_threshold++;
       
-      // Require at least 2 gates to be above threshold to filter out erratic spikes
-      if (gates_above_threshold >= 2) {
+      // Require at least 1 move gate AND 2 still gates to be above threshold
+      // This prevents false positives from still-only triggers (hardware noise)
+      // while still allowing legitimate detection with movement
+      if (move_gates_above_threshold >= 1 && still_gates_above_threshold >= 2) {
         return true;
       } else {
         return false;
