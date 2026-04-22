@@ -1,9 +1,18 @@
 substitutions:
-  common_deviceSpecific_comment: "ld2410 v0.3.4"
+  common_deviceSpecific_comment: "ld2410 v0.3.5"
   uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
 # CHANGES
+# v0.3.5 Pavol Holes 2026-04-22
+#   - [interval] added interval to enable Engineering Mode after startup (every 10s if off)
+#     This ensures gate energies are always available for custom sensor without modifying LD2410 source code
+#     Engineering Mode is required for gate energies to be available (g0-g8 move/still energies)
+#     Without this, Engineering Mode would be disabled after power cycle/restart
+#   - [binary_sensor > ld2410_presence_custom] renamed from ld2410_presence_custom_gates to ld2410_presence_custom
+#     This consolidates the gate-based filtering logic into the main custom sensor
+#   - [binary_sensor > ld2410_presence_custom] deleted old version (based on internal still_target + still_energy)
+#     The gate-based filtering (1 move gate + 2 still gates) is now the standard approach
 # v0.3.4 Pavol Holes 2026-04-21
 #   - [binary_sensor > ld2410_presence_custom_gates > lambda] modified to require at least 1 move gate (g1-g8) AND 2 still gates (g2-g8)
 #     This prevents false positives from still-only triggers (hardware noise) while still detecting legitimate movement
@@ -80,9 +89,26 @@ ld2410:
 switch:
   - platform: ld2410
     engineering_mode:
+      id: switch_ld2410_engineering_mode
       name: LD2410 Engineering Mode
     bluetooth:
       name: LD2410 Control Bluetooth
+
+# Interval to enable Engineering Mode after startup
+# This ensures gate energies are always available for custom sensor
+# Engineering Mode is required for gate energies (g0-g8 move/still energies) to be available
+interval:
+  - interval: 10s
+    then:
+      - if:
+          condition:
+            switch.is_off: switch_ld2410_engineering_mode
+          then:
+            - switch.turn_on: switch_ld2410_engineering_mode
+            - logger.log:
+                tag: "ld2410"
+                level: "INFO"
+                format: "Engineering Mode enabled on boot for gate energy availability"
 
 binary_sensor:
   - platform: ld2410
@@ -146,48 +172,14 @@ binary_sensor:
   - platform: template
     id: ld2410_presence_custom
     name: LD2410 Presence Custom
-    icon: mdi:account
-    device_class: occupancy
-    # update_interval: 10s
-    on_state: 
-      then:
-        - lambda: |-
-            // ESP_LOGI("ld2410", "[LD2410 Presence Custom] Presence changed to [%s]. Still energy: [%.0f], Move energy: [%.0f].", id(ld2410_presence_custom).state ? "ON" : "OFF", id(ld2410_still_energy).state, id(ld2410_move_energy).state);
-            std::string vText = "Presence changed to [" + std::string(id(ld2410_presence_custom).state ? "ON" : "OFF") + "]. Still energy: [" + to_string((int)id(ld2410_still_energy).state) + "], Move energy: [" + to_string((int)id(ld2410_move_energy).state) + "].";
-            id(ld2410_presence_custom_change_reason).publish_state(vText);
-            ESP_LOGI("ld2410", "[LD2410 Presence Custom] %s", vText.c_str());
-    lambda: |-
-      // Combined technique: For still detection, require BOTH internal still target AND still energy threshold
-      // This prevents false positives when still_energy is 100 but internal still_target is OFF (filtered by gates)
-      bool still_detected = id(ld2410_still_target).state && (id(ld2410_still_energy).state > id(number_still_energy_threshold).state);
-      bool move_detected = id(ld2410_move_energy).state > id(number_move_energy_threshold).state;
-      
-      if (still_detected || move_detected) {
-        return true;
-      } else {
-        return false;
-      }
-    filters:
-      # delayed_on prevents false positives when background noise spikes randomly
-      # template in miliseconds so we need to multiple with 1000
-      - delayed_on: !lambda |-
-          return id(number_presence_delayed_on).state * 1000.0;
-      # delayed_off prevents false negatives
-      # template in miliseconds so we need to multiple with 1000
-      - delayed_off: !lambda |-
-          return id(number_presence_delayed_off).state * 1000.0;
-
-  - platform: template
-    id: ld2410_presence_custom_gates
-    name: LD2410 Presence Custom Gates
     icon: mdi:account-multiple
     device_class: occupancy
     # update_interval: 10s
-    on_state: 
+    on_state:
       then:
         - lambda: |-
-            std::string vText = "Gates Presence changed to [" + std::string(id(ld2410_presence_custom_gates).state ? "ON" : "OFF") + "].";
-            ESP_LOGI("ld2410", "[LD2410 Presence Custom Gates] %s", vText.c_str());
+            std::string vText = "Gates Presence changed to [" + std::string(id(ld2410_presence_custom).state ? "ON" : "OFF") + "].";
+            ESP_LOGI("ld2410", "[LD2410 Presence Custom] %s", vText.c_str());
     lambda: |-
       // Gate-based detection: Requires at least 1 move gate AND 2 still gates to exceed thresholds
       // This prevents false positives from still-only triggers while still detecting legitimate movement
