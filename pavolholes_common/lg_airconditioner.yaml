@@ -15,6 +15,9 @@ substitutions:
   is_slave_controller: "false"
 
 # CHANGES
+# v0.3 2026-04-23 Pavol
+#   - changed external_components from git source to local source (esphome-lg-controller-local)
+#   - fixed '/' characters in entity names to Unicode fraction slash (⁄) for ESPHome 2026 compatibility
 # v0.2 2025-06-26 Pavol
 #   - test fix for https://github.com/JanM321/esphome-lg-controller/issues/114#issuecomment-3008138904 applied to fork in my github
 # v0.1 2025-05-29 Pavol
@@ -66,19 +69,19 @@ climate:
     is_slave_controller: ${is_slave_controller}
     temperature_sensor: temp_sensor
     vane1:
-      name: Airflow 1 Up/Down
+      name: Airflow 1 Up⁄Down
       id: vane_position_1
       icon: mdi:arrow-up-down
     vane2:
-      name: Airflow 2 Up/Down
+      name: Airflow 2 Up⁄Down
       id: vane_position_2
       icon: mdi:arrow-up-down
     vane3:
-      name: Airflow 3 Up/Down
+      name: Airflow 3 Up⁄Down
       id: vane_position_3
       icon: mdi:arrow-up-down
     vane4:
-      name: Airflow 4 Up/Down
+      name: Airflow 4 Up⁄Down
       id: vane_position_4
       icon: mdi:arrow-up-down
     overheating:
