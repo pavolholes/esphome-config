@@ -1,7 +1,9 @@
 # https://esphome.io/components/debug.html#debug-component
 
 # changes tracking
-# v0.2 225-06-17 Pavol
+# v0.3 2026-04-22 Pavol
+#   - changed logger from VERY_VERBOSE to DEBUG
+# v0.2 2025-06-17 Pavol
 #   - changed logger from DEBUG to VERY_VERBOSE
 #   - added list of specific logs with INFO level
 # v0.1 2024-01-12
@@ -12,7 +14,7 @@ debug:
 
 # Logger must be at least debug (default)
 logger:
-  level: VERY_VERBOSE  # (default is DEBUG; another option is VERY_VERBOSE)
+  level: DEBUG  # (default is DEBUG; another option is VERY_VERBOSE)
   logs:
     json: INFO
     sensor: INFO
