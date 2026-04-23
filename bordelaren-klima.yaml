@@ -25,33 +25,33 @@ packages:
   # higher in the list is higher priority (can overwrite values from includes below)
   common: !include pavolholes_common/common.yaml
   esp32: !include pavolholes_common/esp32.yaml
-  # debug: !include pavolholes_common/debug.yaml
+  debug: !include pavolholes_common/debug.yaml
   esp32BluetoothProxy: !include pavolholes_common/esp32BluetoothProxy.yaml # including this changes the framework so the first time it have to be loaded to ESP using USB cable, not OTA!
   lg_airconditioner: !include pavolholes_common/lg_airconditioner.yaml
   bh1750: !include pavolholes_common/sensor/bh1750.yaml
   bme280: !include pavolholes_common/sensor/bme280.yaml
   ld2410: !include pavolholes_common/sensor/ld2410.yaml
 
-logger:
-  level: DEBUG  # (default is DEBUG; another option is VERY_VERBOSE)
-  logs:
-    json: INFO
-    sensor: INFO
-    sensor.filter: INFO
-    adc: INFO
-    ntc: INFO
-    resistance: INFO
-    text_sensor: INFO
-    api: INFO
-    api.service: INFO
-    api.connection: INFO
-    ledc: INFO
-    internal_temperature: INFO
-    esp32.preferences: INFO
-    esp32_ble_tracker: INFO
-    esp32_ble: INFO
-    bluetooth_proxy: INFO
-    i2c: INFO
-    i2c.idf: INFO
-    ld2410: INFO
-    bh1750.sensor: INFO
+# logger:
+#   level: DEBUG  # (default is DEBUG; another option is VERY_VERBOSE)
+#   logs:
+#     json: INFO
+#     sensor: INFO
+#     sensor.filter: INFO
+#     adc: INFO
+#     ntc: INFO
+#     resistance: INFO
+#     text_sensor: INFO
+#     api: INFO
+#     api.service: INFO
+#     api.connection: INFO
+#     ledc: INFO
+#     internal_temperature: INFO
+#     esp32.preferences: INFO
+#     esp32_ble_tracker: INFO
+#     esp32_ble: INFO
+#     bluetooth_proxy: INFO
+#     i2c: INFO
+#     i2c.idf: INFO
+#     ld2410: INFO
+#     bh1750.sensor: INFO
