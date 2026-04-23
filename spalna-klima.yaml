@@ -1,4 +1,6 @@
 # CHANGES
+# 0.2 2026-04-23 Pavol
+#   - disabled debug logging
 # 0.1 2025-05-29 Pavol
 #   - initial version
 
@@ -32,26 +34,26 @@ packages:
   bme280: !include pavolholes_common/sensor/bme280.yaml
   ld2410: !include pavolholes_common/sensor/ld2410.yaml
 
-logger:
-  level: DEBUG  # (default is DEBUG; another option is VERY_VERBOSE)
-  logs:
-    json: INFO
-    sensor: INFO
-    sensor.filter: INFO
-    adc: INFO
-    ntc: INFO
-    resistance: INFO
-    text_sensor: INFO
-    api: INFO
-    api.service: INFO
-    api.connection: INFO
-    ledc: INFO
-    internal_temperature: INFO
-    esp32.preferences: INFO
-    esp32_ble_tracker: INFO
-    esp32_ble: INFO
-    bluetooth_proxy: INFO
-    i2c: INFO
-    i2c.idf: INFO
-    ld2410: INFO
-    bh1750.sensor: INFO
+# logger:
+#   level: DEBUG  # (default is DEBUG; another option is VERY_VERBOSE)
+#   logs:
+#     json: INFO
+#     sensor: INFO
+#     sensor.filter: INFO
+#     adc: INFO
+#     ntc: INFO
+#     resistance: INFO
+#     text_sensor: INFO
+#     api: INFO
+#     api.service: INFO
+#     api.connection: INFO
+#     ledc: INFO
+#     internal_temperature: INFO
+#     esp32.preferences: INFO
+#     esp32_ble_tracker: INFO
+#     esp32_ble: INFO
+#     bluetooth_proxy: INFO
+#     i2c: INFO
+#     i2c.idf: INFO
+#     ld2410: INFO
+#     bh1750.sensor: INFO
