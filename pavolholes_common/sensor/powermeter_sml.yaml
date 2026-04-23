@@ -1,9 +1,11 @@
 substitutions:
-  common_deviceSpecific_comment: "powermeter_sml v0.1"
+  comment_powermeter_sml: "powermeter_sml v0.2"
   powermeter_sml_uart_rx: RX
   powermeter_sml_uart_tx: TX
 
 # CHANGES
+# v0.2 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_powermeter_sml
 # v0.1
 #   - initial version 
 

@@ -1,5 +1,9 @@
 substitutions:
-  common_deviceSpecific_comment: "ESP32-C3-super-mini v0.1"
+  comment_esp32_c3: "ESP32-C3-super-mini v0.2"
+
+# CHANGES
+# v0.2 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_esp32_c3
 
 esphome:
   platformio_options:

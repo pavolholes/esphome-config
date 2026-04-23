@@ -1,5 +1,9 @@
 substitutions:
-  common_deviceSpecific_comment: "ESP32 v0.4"
+  comment_esp32: "ESP32 v0.5"
+
+# CHANGES
+# v0.5 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_esp32
 
 esp32:
   board: nodemcu-32s

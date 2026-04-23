@@ -1,7 +1,9 @@
 substitutions:
-  common_deviceSpecific_comment: "ble_proxy v0.2"
+  comment_ble_proxy: "ble_proxy v0.3"
 
 # CHANGES
+# v0.3 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_ble_proxy
 # v0.2
 #   - changed esp32_ble_tracker > scan_parameters > active from false to true
 #   - commented esp32_ble_tracker > scan_parameters > interval

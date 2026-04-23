@@ -1,7 +1,9 @@
 substitutions:
-  common_deviceSpecific_comment: "elektromer v0.2"
+  comment_elektromer: "elektromer v0.3"
 
 # CHANGES
+# v0.3 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_elektromer
 # v0.2
 #   - removed button_reset_total
 # v0.1

@@ -1,9 +1,11 @@
 substitutions:
-  common_deviceSpecific_comment: "ld2410 v0.3.5"
+  comment_ld2410: "ld2410 v0.4.5"
   uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
 # CHANGES
+# v0.4.5 Pavol Holes 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_ld2410
 # v0.3.5 Pavol Holes 2026-04-22
 #   - [interval] added interval to enable Engineering Mode after startup (every 10s if off)
 #     This ensures gate energies are always available for custom sensor without modifying LD2410 source code

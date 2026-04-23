@@ -1,8 +1,10 @@
 substitutions:
-  common_deviceSpecific_comment: "Ikea Vindrinktning v0.1"
+  comment_ikea_vindriktning: "Ikea Vindrinktning v0.2"
   vindrinktning_uart_rx: GPIO16
 
 # CHANGES
+# v0.2 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_ikea_vindriktning
 # v0.1
 #   - initial version 
 

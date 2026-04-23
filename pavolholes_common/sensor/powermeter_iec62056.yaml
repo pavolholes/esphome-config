@@ -1,9 +1,11 @@
 substitutions:
-  common_deviceSpecific_comment: "powermeter_iec62056 v0.5"
+  comment_powermeter_iec: "powermeter_iec62056 v0.6"
   powermeter_iec62056_uart_rx: RX
   powermeter_iec62056_uart_tx: TX
 
 # CHANGES
+# v0.6 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_powermeter_iec
 # v0.5 2024-09-29 Pavol
 #   - renamed sensors to Slovak (English kept in comments)
 #   - removed sensor for Maximum power demand

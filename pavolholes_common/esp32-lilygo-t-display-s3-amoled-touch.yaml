@@ -1,5 +1,9 @@
 substitutions:
-  common_deviceSpecific_comment: "LILYGO T-Display S3 AMOLED Touch v0.1"
+  comment_lilygo_amoled: "LILYGO T-Display S3 AMOLED Touch v0.2"
+
+# CHANGES
+# v0.2 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_lilygo_amoled
 
 esphome:
   platformio_options:

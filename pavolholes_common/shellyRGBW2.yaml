@@ -1,7 +1,9 @@
 substitutions:
-  common_deviceSpecific_comment: "shellyRGBW v0.5"
+  comment_shelly_rgbw: "shellyRGBW v0.6"
 
-# changes tracking
+# CHANGES
+# v0.6 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_shelly_rgbw
 # v0.5 2025-04-18
 #   - changed [esphome] > [platform: ESP8266] and [board: esp01_1m] to [esp8266] > [board: esp01_1m]
 # v0.4 Pavol 2025-01-03

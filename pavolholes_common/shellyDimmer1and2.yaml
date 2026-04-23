@@ -1,11 +1,13 @@
 substitutions:
-  common_deviceSpecific_comment: "shellyDimmer1and2 v0.5"
+  comment_shelly_dimmer: "shellyDimmer1and2 v0.6"
   light_nightBrightnessLevel: "0.01"
   light_eveningBrightnessLevel: "0.20"
   light_fadingStep: "0.05"
   light_min_brightness: "200"
 
 # CHANGES
+# v0.6 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_shelly_dimmer
 # v0.5 2025-04-18
 #   - changed [esphome] > [platform: ESP8266] and [board: modwifi] to [esp8266] > [board: modwifi]
 # v0.4 Pavol 2025-01-03

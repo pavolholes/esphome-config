@@ -1,7 +1,31 @@
 substitutions:
-  common_comment: Common v0.12
+  common_comment: Common v0.13
+  comment_esp8266: ""
+  comment_esp32: ""
+  comment_lilygo_amoled: ""
+  comment_esp32_c3: ""
+  comment_ble_proxy: ""
+  comment_ble_tracker: ""
+  comment_ble_beacon: ""
+  comment_lg_ac: ""
+  comment_elektromer: ""
+  comment_plynomer: ""
+  comment_shelly_rgbw: ""
+  comment_shelly_dimmer: ""
+  comment_shelly_2_5: ""
+  comment_ds18b20: ""
+  comment_ld2410: ""
+  comment_ld2420: ""
+  comment_ikea_vindriktning: ""
+  comment_powermeter_iec: ""
+  comment_powermeter_sml: ""
+  comment_liquid: ""
 
-# changes tracking
+# CHANGES
+# v0.13 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to unique package-specific substitutions
+#   - added default empty substitutions for all package-specific comments
+#   - changed comment format to display all used package versions
 # v0.12 2026-04-15
 #   - added "min_auth_mode: WPA2" to "ap"
 # v0.11 2026-04-15
@@ -30,7 +54,7 @@ esphome:
   name: ${device_name}
   friendly_name: ${friendly_name}
   # area: ${room}
-  comment: ${device_type} | ${common_deviceSpecific_comment} | ${common_comment}
+  comment: ${device_type} | ${comment_esp8266} ${comment_esp32} ${comment_lilygo_amoled} ${comment_esp32_c3} ${comment_ble_proxy} ${comment_ble_tracker} ${comment_ble_beacon} ${comment_lg_ac} ${comment_elektromer} ${comment_plynomer} ${comment_shelly_rgbw} ${comment_shelly_dimmer} ${comment_shelly_2_5} ${comment_ds18b20} ${comment_ld2410} ${comment_ld2420} ${comment_ikea_vindriktning} ${comment_powermeter_iec} ${comment_powermeter_sml} ${comment_liquid} | ${common_comment}
   project:
     name: ${project_name}
     version: ${project_version}

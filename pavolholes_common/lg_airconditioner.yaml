@@ -1,5 +1,5 @@
 substitutions:
-  common_deviceSpecific_comment: "lg_airconditioner v0.2"
+  comment_lg_ac: "lg_airconditioner v0.3"
   # Unique device ID in HA
   # deviceid: "lglivingroom" # XXX
   # Unique device name in HA (sensor names will be prefixed by this name)
@@ -15,6 +15,8 @@ substitutions:
   is_slave_controller: "false"
 
 # CHANGES
+# v0.4 2026-04-23 Pavol
+#   - renamed substitution from common_deviceSpecific_comment to comment_lg_ac
 # v0.3 2026-04-23 Pavol
 #   - changed external_components from git source to local source (esphome-lg-controller-local)
 #   - fixed '/' characters in entity names to Unicode fraction slash (⁄) for ESPHome 2026 compatibility

@@ -1,7 +1,9 @@
 substitutions:
-  common_deviceSpecific_comment: "esp32_ble_beacon v0.3"
+  comment_ble_beacon: "esp32_ble_beacon v0.4"
 
 # CHANGES
+# v0.4 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_ble_beacon
 # 0.3 2024-01-04
 #   - moved from Vitara to package so it can be reused
 #   - removed status_led
@@ -13,7 +15,7 @@ esphome:
   name: ${device_name}
   friendly_name: ${friendly_name}
   area: ${room}
-  comment: ${device_type} | ${common_deviceSpecific_comment} | Common disabled #${common_comment}
+  comment: ${device_type} | ${comment_ble_beacon} | Common disabled #${common_comment}
   project:
     name: ${project_name}
     version: ${project_version}

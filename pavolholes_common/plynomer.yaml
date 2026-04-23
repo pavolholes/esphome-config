@@ -1,7 +1,9 @@
 substitutions:
-  common_deviceSpecific_comment: "plynomer v0.4"
+  comment_plynomer: "plynomer v0.5"
 
 # CHANGES
+# v0.5 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_plynomer
 # v0.4
 #   - reworked from scratch to use the GPIO sensor for the Total sensor and pulse_counter
 #     only for consumption per minute and hour and daily

@@ -1,8 +1,10 @@
 substitutions:
-  common_deviceSpecific_comment: "shelly2_5 v0.3"
+  comment_shelly_2_5: "shelly2_5 v0.4"
   devicename: shelly_25
 
 # CHANGES
+# v0.4 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_shelly_2_5
 # v0.3
 #   - "platform: ade7953" changed to "platform: ade7953_i2c" because it was renamed in ESPHome
 # v0.2

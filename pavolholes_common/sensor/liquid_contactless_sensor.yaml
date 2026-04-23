@@ -1,10 +1,12 @@
 substitutions:
-  common_deviceSpecific_comment: "Liquid Contactless v0.1"
+  comment_liquid: "Liquid Contactless v0.2"
   liquid_contactless_sensor_pin: GPIO6
   liquid_contactless_sensor_pullup: INPUT_PULLUP
   liquid_contactless_sensor_inverted: "True"
 
 # CHANGES
+# v0.2 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_liquid
 # v0.1 2024-01-32
 #   - initial version 
 

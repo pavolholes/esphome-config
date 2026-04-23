@@ -1,9 +1,11 @@
 substitutions:
-  common_deviceSpecific_comment: "ld2420 v0.1"
+  comment_ld2420: "ld2420 v0.2"
   ld2420_uart_tx: RX
   ld2420_uart_rx: TX
 
 # CHANGES
+# v0.2 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_ld2420
 # v0.1 Pavol Holes 2025-01-06
 #   - initial version 
 

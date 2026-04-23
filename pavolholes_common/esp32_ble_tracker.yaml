@@ -17,6 +17,8 @@ substitutions:
 #       ble_tracker_MAC: 40:4C:CA:FB:E0:0E
 
 # CHANGES
+# v0.5 2026-04-23
+#   - renamed substitution from common_deviceSpecific_comment to comment_ble_tracker
 # 0.4 2024-01-18
 #   - changed from tracking one specific BLE device to generic package which accepts variables
 # 0.3
