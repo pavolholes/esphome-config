@@ -6,6 +6,8 @@
 /workspace
 /fonts
 /.ssh/
+/esphome-lg-controller-local/
+/esphome-lg-controller-local-backup/
 
 # ignore below anywhere deeper in the subfolders
 **/.pioenvs/
