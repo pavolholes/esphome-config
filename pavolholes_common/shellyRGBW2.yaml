@@ -1,7 +1,12 @@
 substitutions:
-  comment_shelly_rgbw: "shellyRGBW v0.6"
+  comment_shelly_rgbw: "shellyRGBW v0.7"
+  light_nightBrightnessLevel: "0.01"
+  light_eveningBrightnessLevel: "0.20"
+  light_fadingStep: "0.05"
 
 # CHANGES
+# v0.7 2026-04-23
+#   - added light_nightBrightnessLevel, light_eveningBrightnessLevel, and light_fadingStep substitutions for gpio_button_multiclick.yaml
 # v0.6 2026-04-23
 #   - renamed substitution from common_deviceSpecific_comment to comment_shelly_rgbw
 # v0.5 2025-04-18
