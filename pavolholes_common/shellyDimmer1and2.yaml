@@ -1,11 +1,13 @@
 substitutions:
-  comment_shelly_dimmer: "shellyDimmer1and2 v0.6"
+  comment_shelly_dimmer: "shellyDimmer1and2 v0.7"
   light_nightBrightnessLevel: "0.01"
   light_eveningBrightnessLevel: "0.20"
   light_fadingStep: "0.05"
   light_min_brightness: "200"
 
 # CHANGES
+# v0.7 2026-04-23
+#   - uncommented [binary_sensor > wall_button > internal], [mode: INPUT_PULLUP], and [inverted: True] to fix button functionality
 # v0.6 2026-04-23
 #   - renamed substitution from common_deviceSpecific_comment to comment_shelly_dimmer
 # v0.5 2025-04-18
@@ -162,8 +164,8 @@ binary_sensor:
     pin:
       number: ${button_pin}
       # Pullup means it's switching ground (that's why it's inverted as well).
-      # mode: INPUT_PULLUP
-      # inverted: True
+      mode: INPUT_PULLUP
+      inverted: True
     filters:
       # - delayed_on: 50ms
       - delayed_on_off: 30ms

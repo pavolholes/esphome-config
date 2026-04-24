@@ -1,8 +1,11 @@
 substitutions:
-  comment_shelly_2_5: "shelly2_5 v0.4"
+  comment_shelly_2_5: "shelly2_5 v0.5"
   devicename: shelly_25
 
 # CHANGES
+# v0.5 2026-04-23
+#   - removed deprecated [esphome] > [platform: ESP8266] and changed to [esp8266] > [board: esp01_1m]
+#   - commented [status_led > pin > ignore_strapping_warning] because it's invalid
 # v0.4 2026-04-23
 #   - renamed substitution from common_deviceSpecific_comment to comment_shelly_2_5
 # v0.3
@@ -10,10 +13,9 @@ substitutions:
 # v0.2
 #   - ?
 # v0.1
-#   - initial version 
+#   - initial version
 
-esphome:
-  platform: ESP8266
+esp8266:
   board: esp01_1m
 
 wifi:
@@ -145,7 +147,7 @@ status_led:
   pin:
     number: GPIO0
     inverted: True
-    ignore_strapping_warning: True
+    # ignore_strapping_warning: True
 
 switch:
   - platform: gpio
