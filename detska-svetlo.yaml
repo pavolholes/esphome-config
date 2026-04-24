@@ -15,6 +15,6 @@ substitutions:
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)
   common: !include pavolholes_common/common.yaml
-  # debug: !include pavolholes_common/debug.yaml
+  debug: !include pavolholes_common/debug.yaml
   web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
   shellyDimmer1and2: !include pavolholes_common/shellyDimmer1and2.yaml
