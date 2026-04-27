@@ -1,10 +1,18 @@
 substitutions:
-  comment_ld2410: "ld2410 v0.4.5"
+  comment_ld2410: "ld2410 v0.4.6"
   uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
 # CHANGES
-# v0.4.5 Pavol Holes 2026-04-23
+# v0.4.6 Pavol Holes 2026-04-27
+#   - [binary_sensor > ld2410_presence_custom > on_state] added detailed gate information to change_reason
+#     Now shows which specific gates triggered the change with their energy values
+#     Format: "Move: [g1(23) g4(8)] Still: [g4(12) g5(21) g6(14)]"
+#   - [binary_sensor > ld2410_presence_custom > lambda] implemented hysteresis logic
+#     ACTIVATION: Requires 1 move gate AND 3 still gates (prevents false positives)
+#     MAINTENANCE: Requires only 3 still gates (enables static detection)
+#     This prevents false positives at night while allowing persistent detection when sitting still
+# v0.3.5 Pavol Holes 2026-04-23
 #   - renamed substitution from common_deviceSpecific_comment to comment_ld2410
 # v0.3.5 Pavol Holes 2026-04-22
 #   - [interval] added interval to enable Engineering Mode after startup (every 10s if off)
@@ -180,11 +188,38 @@ binary_sensor:
     on_state:
       then:
         - lambda: |-
-            std::string vText = "Gates Presence changed to [" + std::string(id(ld2410_presence_custom).state ? "ON" : "OFF") + "].";
+            std::string vText = "Gates Presence changed to [" + std::string(id(ld2410_presence_custom).state ? "ON" : "OFF") + "]. ";
+            
+            // Add gate details
+            std::string move_gates_str = "";
+            if (id(ld2410_g1_move_energy).state > id(number_ld2410_g1_move_threshold).state) move_gates_str += "g1(" + to_string((int)id(ld2410_g1_move_energy).state) + ") ";
+            if (id(ld2410_g2_move_energy).state > id(number_ld2410_g2_move_threshold).state) move_gates_str += "g2(" + to_string((int)id(ld2410_g2_move_energy).state) + ") ";
+            if (id(ld2410_g3_move_energy).state > id(number_ld2410_g3_move_threshold).state) move_gates_str += "g3(" + to_string((int)id(ld2410_g3_move_energy).state) + ") ";
+            if (id(ld2410_g4_move_energy).state > id(number_ld2410_g4_move_threshold).state) move_gates_str += "g4(" + to_string((int)id(ld2410_g4_move_energy).state) + ") ";
+            if (id(ld2410_g5_move_energy).state > id(number_ld2410_g5_move_threshold).state) move_gates_str += "g5(" + to_string((int)id(ld2410_g5_move_energy).state) + ") ";
+            if (id(ld2410_g6_move_energy).state > id(number_ld2410_g6_move_threshold).state) move_gates_str += "g6(" + to_string((int)id(ld2410_g6_move_energy).state) + ") ";
+            if (id(ld2410_g7_move_energy).state > id(number_ld2410_g7_move_threshold).state) move_gates_str += "g7(" + to_string((int)id(ld2410_g7_move_energy).state) + ") ";
+            if (id(ld2410_g8_move_energy).state > id(number_ld2410_g8_move_threshold).state) move_gates_str += "g8(" + to_string((int)id(ld2410_g8_move_energy).state) + ") ";
+            
+            std::string still_gates_str = "";
+            if (id(ld2410_g2_still_energy).state > id(number_ld2410_g2_still_threshold).state) still_gates_str += "g2(" + to_string((int)id(ld2410_g2_still_energy).state) + ") ";
+            if (id(ld2410_g3_still_energy).state > id(number_ld2410_g3_still_threshold).state) still_gates_str += "g3(" + to_string((int)id(ld2410_g3_still_energy).state) + ") ";
+            if (id(ld2410_g4_still_energy).state > id(number_ld2410_g4_still_threshold).state) still_gates_str += "g4(" + to_string((int)id(ld2410_g4_still_energy).state) + ") ";
+            if (id(ld2410_g5_still_energy).state > id(number_ld2410_g5_still_threshold).state) still_gates_str += "g5(" + to_string((int)id(ld2410_g5_still_energy).state) + ") ";
+            if (id(ld2410_g6_still_energy).state > id(number_ld2410_g6_still_threshold).state) still_gates_str += "g6(" + to_string((int)id(ld2410_g6_still_energy).state) + ") ";
+            if (id(ld2410_g7_still_energy).state > id(number_ld2410_g7_still_threshold).state) still_gates_str += "g7(" + to_string((int)id(ld2410_g7_still_energy).state) + ") ";
+            if (id(ld2410_g8_still_energy).state > id(number_ld2410_g8_still_threshold).state) still_gates_str += "g8(" + to_string((int)id(ld2410_g8_still_energy).state) + ") ";
+            
+            vText += "Move: [" + move_gates_str + "] Still: [" + still_gates_str + "]";
+            
             ESP_LOGI("ld2410", "[LD2410 Presence Custom] %s", vText.c_str());
+            id(ld2410_presence_custom_change_reason).publish_state(vText);
     lambda: |-
-      // Gate-based detection: Requires at least 1 move gate AND 2 still gates to exceed thresholds
-      // This prevents false positives from still-only triggers while still detecting legitimate movement
+      // Hysteresis logic: Different thresholds for activation vs maintenance
+      // ACTIVATION: Requires 1 move gate AND 3 still gates (prevents false positives)
+      // MAINTENANCE: Requires only 3 still gates (enables static detection)
+      static bool presence_active = false;
+      
       int move_gates_above_threshold = 0;
       int still_gates_above_threshold = 0;
       
@@ -207,14 +242,18 @@ binary_sensor:
       if (id(ld2410_g7_still_energy).state > id(number_ld2410_g7_still_threshold).state) still_gates_above_threshold++;
       if (id(ld2410_g8_still_energy).state > id(number_ld2410_g8_still_threshold).state) still_gates_above_threshold++;
       
-      // Require at least 1 move gate AND 2 still gates to be above threshold
-      // This prevents false positives from still-only triggers (hardware noise)
-      // while still allowing legitimate detection with movement
-      if (move_gates_above_threshold >= 1 && still_gates_above_threshold >= 2) {
-        return true;
-      } else {
-        return false;
+      // Activation: 1 move AND 3 still gates
+      bool should_activate = (move_gates_above_threshold >= 1 && still_gates_above_threshold >= 3);
+      // Maintenance: 3 still gates only
+      bool should_maintain = (still_gates_above_threshold >= 3);
+      
+      if (should_activate) {
+        presence_active = true;
+      } else if (!should_maintain) {
+        presence_active = false;
       }
+      
+      return presence_active;
     filters:
       - delayed_on: !lambda |-
           return id(number_presence_delayed_on).state * 1000.0;
