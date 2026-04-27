@@ -4,7 +4,7 @@ substitutions:
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
 # CHANGES
-# v0.4.6 Pavol Holes 2026-04-27
+# v0.3.6 Pavol Holes 2026-04-27
 #   - [binary_sensor > ld2410_presence_custom > on_state] added detailed gate information to change_reason
 #     Now shows which specific gates triggered the change with their energy values
 #     Format: "Move: [g1(23) g4(8)] Still: [g4(12) g5(21) g6(14)]"
