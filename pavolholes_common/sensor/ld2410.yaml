@@ -1,5 +1,5 @@
 substitutions:
-  comment_ld2410: "ld2410 v0.4.6"
+  comment_ld2410: "ld2410 v0.3.6"
   uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
