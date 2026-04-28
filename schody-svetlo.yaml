@@ -16,8 +16,8 @@ substitutions:
 
 # CHANGES
 # v0.4 Pavol Holes 2026-04-28
-#   - [light > on_boot] added on_boot automation with priority 600 to prevent lights from blinking during boot
-#     Turns off both lights immediately after ESP boot to avoid brief flash on power-on
+#   - [esphome > on_boot] added on_boot automation with priority 600 to prevent lights from blinking during boot
+#     Overrides esphome section from common.yaml to include on_boot that turns off both lights immediately after ESP boot
 
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)
@@ -27,6 +27,20 @@ packages:
   # web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
   esp32BluetoothProxy: !include pavolholes_common/esp32BluetoothProxy.yaml # including this changes the framework so the first time it have to be loaded to ESP using USB cable, not OTA!
   gpio_button: !include pavolholes_common/binary_sensor/gpio_button.yaml
+
+# Override esphome section from common.yaml to add on_boot
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  comment: ${device_type} | ${comment_esp8266} ${comment_esp32} ${comment_lilygo_amoled} ${comment_esp32_c3} ${comment_ble_proxy} ${comment_ble_tracker} ${comment_ble_beacon} ${comment_lg_ac} ${comment_elektromer} ${comment_plynomer} ${comment_shelly_rgbw} ${comment_shelly_dimmer} ${comment_shelly_2_5} ${comment_ds18b20} ${comment_ld2410} ${comment_ld2420} ${comment_ikea_vindriktning} ${comment_powermeter_iec} ${comment_powermeter_sml} ${comment_liquid} | ${common_comment}
+  project:
+    name: ${project_name}
+    version: ${project_version}
+  on_boot:
+    - priority: 600
+      then:
+        - light.turn_off: light_pwm
+        - light.turn_off: light_pwm2
 
 output:
   - platform: ledc
@@ -54,8 +68,3 @@ light:
     restore_mode: ALWAYS_OFF #RESTORE_DEFAULT_OFF
     gamma_correct: 1.0 # to start brightness at 0.01 not at 0.18
 
-on_boot:
-  - priority: 600
-    then:
-      - light.turn_off: light_pwm
-      - light.turn_off: light_pwm2
