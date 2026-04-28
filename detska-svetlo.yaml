@@ -9,7 +9,7 @@ substitutions:
   max_power: "220.0" # watt
   max_temp: "70.0" # °C
   light_nightBrightnessLevel: "0.01"
-  light_eveningBrightnessLevel: "0.20"
+  light_eveningBrightnessLevel: "1.00"
   light_fadingStep: "0.05"
 
 # CHANGES
