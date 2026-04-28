@@ -1,27 +1,27 @@
 substitutions:
-  comment_shelly_dimmer: "shellyDimmer1and2 v0.8"
+  comment_shelly_dimmer: "shellyDimmer1and2 v0.7.1"
   light_nightBrightnessLevel: "0.01"
   light_eveningBrightnessLevel: "0.20"
   light_fadingStep: "0.05"
   light_min_brightness: "200"
 
 # CHANGES
-# 0.8 2026-04-26
+# 0.7.1 2026-04-26
 #   - commented back the [binary_sensor > wall_button > inverted: True] to fix button functionality
 #     In Detska-Spalna when the [inverted: True] is commented I can now turn off the light. Still turning on the light needs to be fixed.
-# v0.7 2026-04-23
+# v0.7.0 2026-04-23
 #   - uncommented [binary_sensor > wall_button > internal], [mode: INPUT_PULLUP], and [inverted: True] to fix button functionality
-# v0.6 2026-04-23
+# v0.6.0 2026-04-23
 #   - renamed substitution from common_deviceSpecific_comment to comment_shelly_dimmer
-# v0.5 2025-04-18
+# v0.5.0 2025-04-18
 #   - changed [esphome] > [platform: ESP8266] and [board: modwifi] to [esp8266] > [board: modwifi]
-# v0.4 Pavol 2025-01-03
+# v0.4.0 Pavol 2025-01-03
 #   - [status_led > pin > ignore_strapping_warning] commented because it's not valid
-# v0.3
+# v0.3.0
 #   - commented the external_components section because the Shelly Dimmer has now official support in the main ESPHOme code 
-# v0.2
+# v0.2.0
 #   - ?
-# v0.1
+# v0.1.0
 #   - initial version 
 
 esp8266:
