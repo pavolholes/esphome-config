@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Schody Svetlo
   room: Schody
   project_name: pavolholes.${friendly_name}
-  project_version: "0.4"
+  project_version: "0.5"
   device_type: ESP32 WROOM
   pwm_pin: GPIO17
   pwm_pin2: GPIO18
@@ -15,6 +15,9 @@ substitutions:
   light_fadingStep: "0.05"
 
 # CHANGES
+# v0.5 Pavol Holes 2026-04-28
+#   - [esphome > on_boot] changed on_boot priority from 600 to -200 to run earlier during boot
+#     Simplified esphome override to only include on_boot section
 # v0.4 Pavol Holes 2026-04-28
 #   - [esphome > on_boot] added on_boot automation with priority 600 to prevent lights from blinking during boot
 #     Overrides esphome section from common.yaml to include on_boot that turns off both lights immediately after ESP boot
@@ -30,14 +33,8 @@ packages:
 
 # Override esphome section from common.yaml to add on_boot
 esphome:
-  name: ${device_name}
-  friendly_name: ${friendly_name}
-  comment: ${device_type} | ${comment_esp8266} ${comment_esp32} ${comment_lilygo_amoled} ${comment_esp32_c3} ${comment_ble_proxy} ${comment_ble_tracker} ${comment_ble_beacon} ${comment_lg_ac} ${comment_elektromer} ${comment_plynomer} ${comment_shelly_rgbw} ${comment_shelly_dimmer} ${comment_shelly_2_5} ${comment_ds18b20} ${comment_ld2410} ${comment_ld2420} ${comment_ikea_vindriktning} ${comment_powermeter_iec} ${comment_powermeter_sml} ${comment_liquid} | ${common_comment}
-  project:
-    name: ${project_name}
-    version: ${project_version}
   on_boot:
-    - priority: 600
+    - priority: -200
       then:
         - light.turn_off: light_pwm
         - light.turn_off: light_pwm2
