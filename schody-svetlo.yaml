@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Schody Svetlo
   room: Schody
   project_name: pavolholes.${friendly_name}
-  project_version: "0.6"
+  project_version: "0.7"
   device_type: ESP32 WROOM
   pwm_pin: GPIO17
   pwm_pin2: GPIO18
@@ -15,6 +15,9 @@ substitutions:
   light_fadingStep: "0.05"
 
 # CHANGES
+# v0.7 Pavol Holes 2026-04-28
+#   - [esphome > on_boot] changed from light.turn_off to output.turn_off to directly control PWM output level
+#     May help prevent boot blinking by setting output level before light component initialization
 # v0.6 Pavol Holes 2026-04-28
 #   - [output > ledc] added frequency: 300Hz to both PWM outputs (standard in other LED configs)
 #     May help stabilize PWM signal during boot to prevent blinking
@@ -39,8 +42,8 @@ esphome:
   on_boot:
     - priority: -200
       then:
-        - light.turn_off: light_pwm
-        - light.turn_off: light_pwm2
+        - output.turn_off: output_pwm
+        - output.turn_off: output_pwm2
 
 output:
   - platform: ledc
