@@ -14,6 +14,19 @@ substitutions:
   light_eveningBrightnessLevel: "0.20"
   light_fadingStep: "0.05"
 
+# TODO: Boot blinking issue - lights briefly flash on power-on during ESP32 boot
+# Software solutions attempted (none worked):
+#   - v0.4: on_boot automation with priority 600 (light.turn_off)
+#   - v0.5: on_boot automation with priority -200 (earlier execution)
+#   - v0.6: frequency: 300Hz on PWM outputs
+#   - v0.7: output.turn_off instead of light.turn_off in on_boot
+#   - v0.8: inverted: true on PWM output pins
+# Root cause: GPIO pins (GPIO17, GPIO18) are in floating state during ESP32 boot before ESPHome firmware starts
+# Hardware solutions (requires physical modification):
+#   1. Add 10kΩ pull-down resistors from GPIO17 and GPIO18 to GND
+#   2. Change to GPIO pins with better boot behavior (e.g., GPIO2, GPIO4, GPIO5)
+# Note: Brief blink on boot is a hardware limitation, cannot be fixed with software configuration
+
 # CHANGES
 # v0.8 Pavol Holes 2026-04-28
 #   - [output > ledc] added inverted: true to both PWM output pins
