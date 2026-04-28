@@ -8,15 +8,15 @@ substitutions:
 # CHANGES
 # v0.6 2026-04-23
 #   - renamed substitution from common_deviceSpecific_comment to comment_shelly_dimmer
-# v0.5.0 2025-04-18
+# v0.5 2025-04-18
 #   - changed [esphome] > [platform: ESP8266] and [board: modwifi] to [esp8266] > [board: modwifi]
-# v0.4.0 Pavol 2025-01-03
+# v0.4 Pavol 2025-01-03
 #   - [status_led > pin > ignore_strapping_warning] commented because it's not valid
-# v0.3.0
+# v0.3
 #   - commented the external_components section because the Shelly Dimmer has now official support in the main ESPHOme code 
-# v0.2.0
+# v0.2
 #   - ?
-# v0.1.0
+# v0.1
 #   - initial version 
 
 esp8266:
