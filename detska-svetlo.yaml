@@ -3,18 +3,27 @@ substitutions:
   friendly_name: Detska Svetlo
   room: Detska
   project_name: pavolholes.${friendly_name}
-  project_version: "0.4"
-  device_type: Shelly Dimmer1
-  button_pin: "GPIO12"
+  project_version: "0.5"
+  device_type: Shelly Dimmer2
+  button_pin: "GPIO14"
   max_power: "220.0" # watt
   max_temp: "70.0" # °C
   light_nightBrightnessLevel: "0.01"
   light_eveningBrightnessLevel: "0.20"
   light_fadingStep: "0.05"
 
+# CHANGES
+# v0.5 2026-04-28
+#   - changed device_type from Shelly Dimmer1 to Shelly Dimmer2 due to hardware button issue
+#     Shelly Dimmer1 has hardware floating input issue when relay is OFF (GitHub issue #5305)
+#     Replaced with Shelly Dimmer2 which doesn't have this issue
+#   - changed button_pin from GPIO12 to GPIO14 (Shelly Dimmer2 first input)
+#   - commented out debug package
+# v0.4
+
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)
   common: !include pavolholes_common/common.yaml
-  debug: !include pavolholes_common/debug.yaml
+  # debug: !include pavolholes_common/debug.yaml
   web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
   shellyDimmer1and2: !include pavolholes_common/shellyDimmer1and2.yaml

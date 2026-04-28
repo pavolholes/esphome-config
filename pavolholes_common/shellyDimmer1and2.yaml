@@ -1,17 +1,12 @@
 substitutions:
-  comment_shelly_dimmer: "shellyDimmer1and2 v0.7.1"
+  comment_shelly_dimmer: "shellyDimmer1and2 v0.6"
   light_nightBrightnessLevel: "0.01"
   light_eveningBrightnessLevel: "0.20"
   light_fadingStep: "0.05"
   light_min_brightness: "200"
 
 # CHANGES
-# v0.7.1 2026-04-26
-#   - commented back the [binary_sensor > wall_button > inverted: True] to fix button functionality
-#     In Detska-Spalna when the [inverted: True] is commented I can now turn off the light. Still turning on the light needs to be fixed.
-# v0.7.0 2026-04-23
-#   - uncommented [binary_sensor > wall_button > internal], [mode: INPUT_PULLUP], and [inverted: True] to fix button functionality
-# v0.6.0 2026-04-23
+# v0.6 2026-04-23
 #   - renamed substitution from common_deviceSpecific_comment to comment_shelly_dimmer
 # v0.5.0 2025-04-18
 #   - changed [esphome] > [platform: ESP8266] and [board: modwifi] to [esp8266] > [board: modwifi]
@@ -167,7 +162,7 @@ binary_sensor:
     pin:
       number: ${button_pin}
       # Pullup means it's switching ground (that's why it's inverted as well).
-      mode: INPUT_PULLUP
+      # mode: INPUT_PULLUP
       # inverted: True
     filters:
       # - delayed_on: 50ms
