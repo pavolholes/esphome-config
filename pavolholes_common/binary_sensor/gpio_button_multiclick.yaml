@@ -66,7 +66,7 @@
     # While button is pressed, keep changing the brightness.
     - while:
         condition:
-          binary_sensor.is_on: wall_button
+          binary_sensor.is_off: wall_button
         then:
           - logger.log:
               format: "[${friendly_name} Button] [Single Long Clicked] fading brightness..."
