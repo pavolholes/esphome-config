@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Schody Svetlo
   room: Schody
   project_name: pavolholes.${friendly_name}
-  project_version: "0.3"
+  project_version: "0.4"
   device_type: ESP32 WROOM
   pwm_pin: GPIO17
   pwm_pin2: GPIO18
@@ -13,6 +13,11 @@ substitutions:
   light_nightBrightnessLevel: "0.01"
   light_eveningBrightnessLevel: "0.20"
   light_fadingStep: "0.05"
+
+# CHANGES
+# v0.4 Pavol Holes 2026-04-28
+#   - [light > on_boot] added on_boot automation with priority 600 to prevent lights from blinking during boot
+#     Turns off both lights immediately after ESP boot to avoid brief flash on power-on
 
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)
@@ -48,3 +53,9 @@ light:
     output: output_pwm2
     restore_mode: ALWAYS_OFF #RESTORE_DEFAULT_OFF
     gamma_correct: 1.0 # to start brightness at 0.01 not at 0.18
+
+on_boot:
+  - priority: 600
+    then:
+      - light.turn_off: light_pwm
+      - light.turn_off: light_pwm2
