@@ -48,6 +48,7 @@ remote_receiver:
 
 binary_sensor:
   - platform: remote_receiver
+    id: tv_volume_up
     name: Obyvacka TV Remote Volume Up
     samsung:
       data: 0xE0E0E01F
@@ -55,13 +56,14 @@ binary_sensor:
     on_state:
       - if:
           condition:
-            binary_sensor.is_on: Obyvacka TV Remote Volume Up
+            binary_sensor.is_on: tv_volume_up
           then:
             - mqtt.publish:
                 topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
                 payload: CEojrREgAmUCICAB4AkFApcGZaAD4A0LACCgAYAJ4AEFQC+ADQEgAkALgAMAZaAHESACZQIgApcGIAKXBiACIAIgAg==
 
   - platform: remote_receiver
+    id: tv_volume_down
     name: Obyvacka TV Remote Volume Down
     samsung:
       data: 0xE0E0D02F
@@ -69,13 +71,14 @@ binary_sensor:
     on_state:
       - if:
           condition:
-            binary_sensor.is_on: Obyvacka TV Remote Volume Down
+            binary_sensor.is_on: tv_volume_down
           then:
             - mqtt.publish:
                 topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
                 payload: BVkjphEzAuAPAQGiBuAVA+ADAUArwAHgBwvAD0AHQANAAUAHQAMLMwIzAq+cWSPlCDMC
 
   - platform: remote_receiver
+    id: tv_mute
     name: Obyvacka TV Remote Mute
     samsung:
       data: 0xE0E0F00F
@@ -83,13 +86,14 @@ binary_sensor:
     on_state:
       - if:
           condition:
-            binary_sensor.is_on: Obyvacka TV Remote Mute
+            binary_sensor.is_on: tv_mute
           then:
             - mqtt.publish:
                 topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
                 payload: BTQj0RE1AuAPAQGcBuAVA8ABQCfAAeADC0ABwA9AB0ADQAFAB8ADCzUCNQLJnDQj/gg1Ag==
 
   - platform: remote_receiver
+    id: tv_power
     name: Obyvacka TV Remote Power
     samsung:
       data: 0xE0E06798
@@ -97,7 +101,7 @@ binary_sensor:
     on_state:
       - if:
           condition:
-            binary_sensor.is_on: Obyvacka TV Remote Power
+            binary_sensor.is_on: tv_power
           then:
             - mqtt.publish:
                 topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
