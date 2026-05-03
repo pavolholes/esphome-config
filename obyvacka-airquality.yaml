@@ -53,7 +53,7 @@ binary_sensor:
     samsung:
       data: 0xE0E0E01F
       nbits: 32
-    timeout: 500ms
+      timeout: 500ms
     on_press:
       - mqtt.publish:
           topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
@@ -64,7 +64,7 @@ binary_sensor:
     samsung:
       data: 0xE0E0D02F
       nbits: 32
-    timeout: 500ms
+      timeout: 500ms
     on_press:
       - mqtt.publish:
           topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
@@ -75,7 +75,7 @@ binary_sensor:
     samsung:
       data: 0xE0E0F00F
       nbits: 32
-    timeout: 500ms
+      timeout: 500ms
     on_press:
       - mqtt.publish:
           topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
@@ -86,7 +86,7 @@ binary_sensor:
     samsung:
       data: 0xE0E06798
       nbits: 32
-    timeout: 500ms
+      timeout: 500ms
     on_press:
       - mqtt.publish:
           topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
