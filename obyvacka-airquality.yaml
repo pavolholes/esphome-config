@@ -11,9 +11,8 @@ substitutions:
 
 # CHANGES
 # v0.2 2026-05-03
-#   - remote_receiver > binary_sensor: added on_press automation to publish Genius IR codes directly to MQTT
-#     Changed from on_click to on_press for proper trigger on IR signal reception
-#     Added inverted: true to binary_sensor level to fix ON state detection in Home Assistant
+#   - remote_receiver > binary_sensor: added on_state automation with is_on condition to publish Genius IR codes directly to MQTT
+#     Changed from on_press to on_state with condition to handle binary sensor state changes
 #     Removed Home Assistant as middleman for IR signal translation
 #     Volume Up, Volume Down, Mute, Power now send Genius IR codes via zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
 # v0.1
@@ -50,47 +49,59 @@ remote_receiver:
 binary_sensor:
   - platform: remote_receiver
     name: Obyvacka TV Remote Volume Up
-    inverted: true
     samsung:
       data: 0xE0E0E01F
       nbits: 32
-    on_press:
-      - mqtt.publish:
-          topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
-          payload: CEojrREgAmUCICAB4AkFApcGZaAD4A0LACCgAYAJ4AEFQC+ADQEgAkALgAMAZaAHESACZQIgApcGIAKXBiACIAIgAg==
+    on_state:
+      - if:
+          condition:
+            binary_sensor.is_on: Obyvacka TV Remote Volume Up
+          then:
+            - mqtt.publish:
+                topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
+                payload: CEojrREgAmUCICAB4AkFApcGZaAD4A0LACCgAYAJ4AEFQC+ADQEgAkALgAMAZaAHESACZQIgApcGIAKXBiACIAIgAg==
 
   - platform: remote_receiver
     name: Obyvacka TV Remote Volume Down
-    inverted: true
     samsung:
       data: 0xE0E0D02F
       nbits: 32
-    on_press:
-      - mqtt.publish:
-          topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
-          payload: BVkjphEzAuAPAQGiBuAVA+ADAUArwAHgBwvAD0AHQANAAUAHQAMLMwIzAq+cWSPlCDMC
+    on_state:
+      - if:
+          condition:
+            binary_sensor.is_on: Obyvacka TV Remote Volume Down
+          then:
+            - mqtt.publish:
+                topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
+                payload: BVkjphEzAuAPAQGiBuAVA+ADAUArwAHgBwvAD0AHQANAAUAHQAMLMwIzAq+cWSPlCDMC
 
   - platform: remote_receiver
     name: Obyvacka TV Remote Mute
-    inverted: true
     samsung:
       data: 0xE0E0F00F
       nbits: 32
-    on_press:
-      - mqtt.publish:
-          topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
-          payload: BTQj0RE1AuAPAQGcBuAVA8ABQCfAAeADC0ABwA9AB0ADQAFAB8ADCzUCNQLJnDQj/gg1Ag==
+    on_state:
+      - if:
+          condition:
+            binary_sensor.is_on: Obyvacka TV Remote Mute
+          then:
+            - mqtt.publish:
+                topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
+                payload: BTQj0RE1AuAPAQGcBuAVA8ABQCfAAeADC0ABwA9AB0ADQAFAB8ADCzUCNQLJnDQj/gg1Ag==
 
   - platform: remote_receiver
     name: Obyvacka TV Remote Power
-    inverted: true
     samsung:
       data: 0xE0E06798
       nbits: 32
-    on_press:
-      - mqtt.publish:
-          topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
-          payload: CD8j2REoAnACKOAAAUALQANAAQGtBuAVAwEoAoApQCdAAeAHB0Ad4AcT4AMPwAsH1Jw6I9IIKAI=
+    on_state:
+      - if:
+          condition:
+            binary_sensor.is_on: Obyvacka TV Remote Power
+          then:
+            - mqtt.publish:
+                topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
+                payload: CD8j2REoAnACKOAAAUALQANAAQGtBuAVAwEoAoApQCdAAeAHB0Ad4AcT4AMPwAsH1Jw6I9IIKAI=
 
 mqtt:
   broker: 192.168.2.20
