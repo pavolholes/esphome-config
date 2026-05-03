@@ -3,11 +3,18 @@ substitutions:
   friendly_name: Obyvacka AirQuality
   room: Obyvacka
   project_name: pavolholes.${friendly_name}
-  project_version: "0.1"
+  project_version: "0.2"
   device_type: ESP32 WROOM-32 D1mini
   i2c_sda: GPIO21
   i2c_scl: GPIO22
   bme280_temperature_offset: "-4.4"
+
+# CHANGES
+# v0.2 2026-05-03
+#   - remote_receiver > binary_sensor: added on_click automation to publish Genius IR codes directly to MQTT
+#     Removed Home Assistant as middleman for IR signal translation
+#     Volume Up, Volume Down, Mute, Power now send Genius IR codes via zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
+# v0.1
 
 esp32:
   board: wemos_d1_mini32
@@ -44,21 +51,43 @@ binary_sensor:
     samsung:
       data: 0xE0E0E01F
       nbits: 32
+    on_click:
+      - mqtt.publish:
+          topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
+          payload: CEojrREgAmUCICAB4AkFApcGZaAD4A0LACCgAYAJ4AEFQC+ADQEgAkALgAMAZaAHESACZQIgApcGIAKXBiACIAIgAg==
 
   - platform: remote_receiver
     name: Obyvacka TV Remote Volume Down
     samsung:
       data: 0xE0E0D02F
       nbits: 32
+    on_click:
+      - mqtt.publish:
+          topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
+          payload: BVkjphEzAuAPAQGiBuAVA+ADAUArwAHgBwvAD0AHQANAAUAHQAMLMwIzAq+cWSPlCDMC
 
   - platform: remote_receiver
     name: Obyvacka TV Remote Mute
     samsung:
       data: 0xE0E0F00F
       nbits: 32
+    on_click:
+      - mqtt.publish:
+          topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
+          payload: BTQj0RE1AuAPAQGcBuAVA8ABQCfAAeADC0ABwA9AB0ADQAFAB8ADCzUCNQLJnDQj/gg1Ag==
 
   - platform: remote_receiver
     name: Obyvacka TV Remote Power
     samsung:
       data: 0xE0E06798
       nbits: 32
+    on_click:
+      - mqtt.publish:
+          topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
+          payload: CD8j2REoAnACKOAAAUALQANAAQGtBuAVAwEoAoApQCdAAeAHB0Ad4AcT4AMPwAsH1Jw6I9IIKAI=
+
+mqtt:
+  broker: 192.168.2.20
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+
