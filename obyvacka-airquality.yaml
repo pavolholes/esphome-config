@@ -16,6 +16,7 @@ substitutions:
 #     Added id: parameters for entity references
 #     Removed Home Assistant as middleman for IR signal translation
 #     Volume Up, Volume Down, Mute, Power now send Genius IR codes via zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
+#     Mute is disabled, because it's being used by Home Assistant to Power On the Genius only when it's off (which is measured by the socket)
 # v0.1
 
 esp32:
@@ -76,10 +77,10 @@ binary_sensor:
     samsung:
       data: 0xE0E0F00F
       nbits: 32
-    on_press:
-      - mqtt.publish:
-          topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
-          payload: BTQj0RE1AuAPAQGcBuAVA8ABQCfAAeADC0ABwA9AB0ADQAFAB8ADCzUCNQLJnDQj/gg1Ag==
+    # on_press:
+    #   - mqtt.publish:
+    #       topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
+    #       payload: BTQj0RE1AuAPAQGcBuAVA8ABQCfAAeADC0ABwA9AB0ADQAFAB8ADCzUCNQLJnDQj/gg1Ag==
 
   - platform: remote_receiver
     id: tv_power
