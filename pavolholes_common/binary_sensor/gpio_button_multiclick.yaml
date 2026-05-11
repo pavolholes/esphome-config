@@ -109,30 +109,31 @@
               level: INFO
           - if:
               condition:
-                - sun.is_above_horizon:
+                - binary_sensor.is_on: ha_time_for_lights_night
               then:
                 - logger.log:
-                    format: "[${friendly_name} Button Single Short Clicked] ... and sun is above horizon, setting brightness to 1.00."
+                    format: "[${friendly_name} Button Single Short Clicked] Night time helper is ON, setting brightness to ${light_nightBrightnessLevel}."
                     level: INFO
                 - light.turn_on:
                     id: ${light_id}
-                    brightness: 1.0                   
+                    brightness: ${light_nightBrightnessLevel}
               else:
-                - logger.log:
-                    format: "[${friendly_name} Button Single Short Clicked] ... and sun is below horizon..."
-                    level: INFO
-                - light.turn_on:
-                    id: ${light_id}
-                    brightness: !lambda |-
-                      if (id(sntp_time).now().hour == 19) {
-                        ESP_LOGI("main", "[${friendly_name} Button Single Short Clicked] ... and it's between 19:00:00 and 19:59:59, setting brightness to ${light_eveningBrightnessLevel}.");
-                        return ${light_eveningBrightnessLevel};
-                      } else if (id(sntp_time).now().hour < 7 || id(sntp_time).now().hour >= 20) {
-                        ESP_LOGI("main", "[${friendly_name} Button Single Short Clicked] ... and it's less then 7:00:00 or more than 19:59:59 setting brightness to ${light_nightBrightnessLevel}.");
-                        return ${light_nightBrightnessLevel};
-                      } else {
-                        ESP_LOGI("main", "[${friendly_name} Button Single Short Clicked] ... and no specific time condition was met, setting brightness to 1.00.");
-                        return 1.00;
-                      }
+                - if:
+                    condition:
+                      - binary_sensor.is_on: ha_time_for_lights_evening
+                    then:
+                      - logger.log:
+                          format: "[${friendly_name} Button Single Short Clicked] Evening time helper is ON, setting brightness to ${light_eveningBrightnessLevel}."
+                          level: INFO
+                      - light.turn_on:
+                          id: ${light_id}
+                          brightness: ${light_eveningBrightnessLevel}
+                    else:
+                      - logger.log:
+                          format: "[${friendly_name} Button Single Short Clicked] No time helper is ON, setting brightness to 1.00."
+                          level: INFO
+                      - light.turn_on:
+                          id: ${light_id}
+                          brightness: 1.00
 # --- Single short click end
 

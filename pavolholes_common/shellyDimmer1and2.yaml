@@ -1,11 +1,14 @@
 substitutions:
-  comment_shelly_dimmer: "shellyDimmer1and2 v0.6"
+  comment_shelly_dimmer: "shellyDimmer1and2 v0.7"
   light_nightBrightnessLevel: "0.01"
   light_eveningBrightnessLevel: "0.20"
   light_fadingStep: "0.05"
   light_min_brightness: "200"
 
 # CHANGES
+# v0.7 2026-05-11 Pavol Holes
+#   - Added Home Assistant Time Helpers (ha_time_for_lights_evening, ha_time_for_lights_night)
+#     for integration with HA time-based brightness control
 # v0.6 2026-04-23
 #   - renamed substitution from common_deviceSpecific_comment to comment_shelly_dimmer
 # v0.5 2025-04-18
@@ -154,16 +157,37 @@ light:
 
 binary_sensor:
   # Create gpio binary_sensor (input) for button connected to pin.
+  # Home Assistant Time Helpers (required for gpio_button_multiclick.yaml)
+  - platform: homeassistant
+    id: ha_time_for_lights_evening
+    entity_id: binary_sensor.time_for_lights_evening
+    internal: true
+    on_state:
+      - logger.log:
+          format: "[${friendly_name} HA Helper] time_for_lights_evening changed to: %s"
+          level: INFO
+          args: ["x"]
+
+  - platform: homeassistant
+    id: ha_time_for_lights_night
+    entity_id: binary_sensor.time_for_lights_night
+    internal: true
+    on_state:
+      - logger.log:
+          format: "[${friendly_name} HA Helper] time_for_lights_night changed to: %s"
+          level: INFO
+          args: ["x"]
+
   - platform: gpio
-    id: wall_button
-    name: Light Wall Button
-    device_class: light
-    internal: True
     pin:
       number: ${button_pin}
       # Pullup means it's switching ground (that's why it's inverted as well).
       # mode: INPUT_PULLUP
       # inverted: True
+    id: wall_button
+    name: Light Wall Button
+    device_class: light
+    internal: True
     filters:
       # - delayed_on: 50ms
       - delayed_on_off: 30ms

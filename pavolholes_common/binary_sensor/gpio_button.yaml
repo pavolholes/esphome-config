@@ -3,7 +3,33 @@ substitutions:
   button_pullup: INPUT_PULLDOWN
   button_inverted: "False"
 
+# CHANGES
+# v0.1 2026-05-11 Pavol Holes
+#   - Added Home Assistant Time Helpers (ha_time_for_lights_evening, ha_time_for_lights_night)
+#     for integration with HA time-based brightness control
+
 binary_sensor:
+  # Home Assistant Time Helpers (required for gpio_button_multiclick.yaml)
+  - platform: homeassistant
+    id: ha_time_for_lights_evening
+    entity_id: binary_sensor.time_for_lights_evening
+    internal: true
+    on_state:
+      - logger.log:
+          format: "[${friendly_name} HA Helper] time_for_lights_evening changed to: %s"
+          level: INFO
+          args: ["x"]
+
+  - platform: homeassistant
+    id: ha_time_for_lights_night
+    entity_id: binary_sensor.time_for_lights_night
+    internal: true
+    on_state:
+      - logger.log:
+          format: "[${friendly_name} HA Helper] time_for_lights_night changed to: %s"
+          level: INFO
+          args: ["x"]
+
   # Create gpio binary_sensor (input) for button connected to pin.
   - platform: gpio
     id: wall_button
