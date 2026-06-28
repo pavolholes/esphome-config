@@ -1,9 +1,19 @@
 substitutions:
-  comment_ld2410: "ld2410 v0.3.6"
+  comment_ld2410: "ld2410 v0.3.8"
   uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
 # CHANGES
+# v0.3.8 Pavol Holes 2026-06-28
+#   - [binary_sensor > ld2410_presence_custom > lambda] added safety check for invalid (NaN/negative) thresholds
+#     If gate thresholds are invalid (e.g. after power cycle/restart), presence is forced OFF
+#     This prevents the hysteresis static variable from getting stuck ON when thresholds are unknown
+#   - [button > ld2410 > query_params] added explicit id so it can be called from lambda/scripts
+#   - [interval] added automatic query_params if thresholds are invalid to recover from unknown state
+# v0.3.7 Pavol Holes 2026-06-01
+#   - added watchdog automation that monitors LD2410 sensor health
+#     If LD2410 sensors (g1_move_energy) are unavailable for >5 minutes, ESP auto-restarts
+#     Requires restart_button id defined in common.yaml
 # v0.3.6 Pavol Holes 2026-04-27
 #   - [binary_sensor > ld2410_presence_custom > on_state] added detailed gate information to change_reason
 #     Now shows which specific gates triggered the change with their energy values
@@ -104,12 +114,13 @@ switch:
     bluetooth:
       name: LD2410 Control Bluetooth
 
-# Interval to enable Engineering Mode after startup
+# Interval to enable Engineering Mode after startup and monitor sensor health
 # This ensures gate energies are always available for custom sensor
 # Engineering Mode is required for gate energies (g0-g8 move/still energies) to be available
 interval:
   - interval: 10s
     then:
+      # Enable Engineering Mode if off
       - if:
           condition:
             switch.is_off: switch_ld2410_engineering_mode
@@ -119,6 +130,46 @@ interval:
                 tag: "ld2410"
                 level: "INFO"
                 format: "Engineering Mode enabled on boot for gate energy availability"
+      # Query params if thresholds are invalid (e.g. after power cycle)
+      - lambda: |-
+          bool thresholds_valid = !std::isnan(id(number_ld2410_g1_move_threshold).state) && 
+                                  id(number_ld2410_g1_move_threshold).state >= 0 &&
+                                  !std::isnan(id(number_ld2410_g2_still_threshold).state) && 
+                                  id(number_ld2410_g2_still_threshold).state >= 0;
+          if (!thresholds_valid) {
+            uint32_t elapsed = millis() - id(last_query_params_time);
+            if (id(last_query_params_time) == 0 || elapsed > 30000) {
+              ESP_LOGW("ld2410", "Invalid thresholds detected, querying LD2410 parameters...");
+              id(button_ld2410_query_params).press();
+              id(last_query_params_time) = millis();
+            }
+          }
+      # Watchdog: Check LD2410 sensor health
+      - lambda: |
+          // Check if LD2410 gate energy sensor has valid data (not NaN and >= 0)
+          bool has_valid_data = !std::isnan(id(ld2410_g1_move_energy).state) && 
+                                id(ld2410_g1_move_energy).state >= 0;
+          
+          if (has_valid_data) {
+            // Sensor is working, update timestamp
+            id(last_ld2410_data_time) = millis();
+            ESP_LOGD("watchdog", "LD2410 data OK (g1_move=%.1f)", id(ld2410_g1_move_energy).state);
+          } else {
+            // Sensor data is unavailable - check how long it's been
+            uint32_t elapsed = millis() - id(last_ld2410_data_time);
+            uint32_t timeout_ms = 5 * 60 * 1000; // 5 minutes in milliseconds
+            
+            if (elapsed > timeout_ms && id(last_ld2410_data_time) > 0) {
+              ESP_LOGE("watchdog", "LD2410 sensors unavailable for %d seconds! Initiating restart...", elapsed / 1000);
+              // Trigger restart via script
+              id(watchdog_restart).execute();
+            } else if (id(last_ld2410_data_time) > 0) {
+              ESP_LOGW("watchdog", "LD2410 data unavailable for %d seconds (timeout: %d s)", 
+                       elapsed / 1000, timeout_ms / 1000);
+            } else {
+              ESP_LOGD("watchdog", "Waiting for initial LD2410 data...");
+            }
+          }
 
 binary_sensor:
   - platform: ld2410
@@ -219,6 +270,18 @@ binary_sensor:
       // ACTIVATION: Requires 1 move gate AND 3 still gates (prevents false positives)
       // MAINTENANCE: Requires only 3 still gates (enables static detection)
       static bool presence_active = false;
+      
+      // Safety check: if gate thresholds are invalid (NaN or negative), force presence OFF
+      // This prevents the hysteresis state from getting stuck ON after power cycle/restart
+      // when LD2410 parameters are not yet available.
+      bool thresholds_valid = !std::isnan(id(number_ld2410_g1_move_threshold).state) && 
+                              id(number_ld2410_g1_move_threshold).state >= 0 &&
+                              !std::isnan(id(number_ld2410_g2_still_threshold).state) && 
+                              id(number_ld2410_g2_still_threshold).state >= 0;
+      if (!thresholds_valid) {
+        presence_active = false;
+        return false;
+      }
       
       int move_gates_above_threshold = 0;
       int still_gates_above_threshold = 0;
@@ -511,6 +574,7 @@ button:
     restart:
       name: LD2410 Restart
     query_params:
+      id: button_ld2410_query_params
       name: LD2410 Query Params
   - platform: template
     name: LD2410 Auto-calibration
@@ -576,3 +640,25 @@ select:
     #   name: LD2410 Light Function
     # out_pin_level:
     #   name: LD2410 Out PIN Level
+
+# Watchdog: Monitor LD2410 sensor health and auto-restart if unavailable
+# Requires restart_button id defined in common.yaml
+globals:
+  - id: last_ld2410_data_time
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  - id: last_query_params_time
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+
+script:
+  - id: watchdog_restart
+    then:
+      - logger.log:
+          format: "[WATCHDOG] Restarting due to LD2410 sensor unavailability"
+          level: ERROR
+          tag: "watchdog"
+      - delay: 2s
+      - button.press: restart_button
