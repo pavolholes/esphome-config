@@ -1,4 +1,9 @@
 # CHANGES
+# 0.3 2026-06-28 Pavol
+#   - LD2410 presence: override hysteresis logic for bedroom
+#     activation: 1 move + 2 still gates (instead of default 3 still)
+#     maintenance: 2 still gates (instead of default 3 still)
+#     Better detection of static sleeping person while still requiring move gate to activate
 # 0.2 2026-04-23 Pavol
 #   - disabled debug logging
 # 0.1 2025-05-29 Pavol
@@ -22,6 +27,11 @@ substitutions:
   # UART: LD2410
   uart_ld2410_tx: GPIO17 # RX
   uart_ld2410_rx: GPIO16 # TX
+
+  # LD2410: Bedroom-specific hysteresis (sleeping person is mostly static)
+  ld2410_activation_move_gates: "1"
+  ld2410_activation_still_gates: "2"
+  ld2410_maintenance_still_gates: "2"
 
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)

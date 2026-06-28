@@ -1,9 +1,20 @@
 substitutions:
-  comment_ld2410: "ld2410 v0.3.8"
+  comment_ld2410: "ld2410 v0.3.9"
   uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
+  # LD2410 presence hysteresis logic - configurable per device
+  # Override these in device-specific yaml before the !include of this package
+  ld2410_activation_move_gates: "1"   # move gates required to ACTIVATE presence
+  ld2410_activation_still_gates: "3"   # still gates required to ACTIVATE presence
+  ld2410_maintenance_still_gates: "3"  # still gates required to MAINTAIN presence
+
 # CHANGES
+# v0.3.9 Pavol Holes 2026-06-28
+#   - [binary_sensor > ld2410_presence_custom > lambda] made hysteresis logic configurable via substitutions
+#     ld2410_activation_move_gates, ld2410_activation_still_gates, ld2410_maintenance_still_gates
+#     Allows per-device tuning (e.g. bedroom needs fewer still gates than living room)
+#   - default values keep original behavior: 1 move + 3 still to activate, 3 still to maintain
 # v0.3.8 Pavol Holes 2026-06-28
 #   - [binary_sensor > ld2410_presence_custom > lambda] added safety check for invalid (NaN/negative) thresholds
 #     If gate thresholds are invalid (e.g. after power cycle/restart), presence is forced OFF
@@ -267,8 +278,8 @@ binary_sensor:
             id(ld2410_presence_custom_change_reason).publish_state(vText);
     lambda: |-
       // Hysteresis logic: Different thresholds for activation vs maintenance
-      // ACTIVATION: Requires 1 move gate AND 3 still gates (prevents false positives)
-      // MAINTENANCE: Requires only 3 still gates (enables static detection)
+      // ACTIVATION: Requires ${ld2410_activation_move_gates} move gate(s) AND ${ld2410_activation_still_gates} still gate(s)
+      // MAINTENANCE: Requires ${ld2410_maintenance_still_gates} still gate(s)
       static bool presence_active = false;
       
       // Safety check: if gate thresholds are invalid (NaN or negative), force presence OFF
@@ -305,10 +316,10 @@ binary_sensor:
       if (id(ld2410_g7_still_energy).state > id(number_ld2410_g7_still_threshold).state) still_gates_above_threshold++;
       if (id(ld2410_g8_still_energy).state > id(number_ld2410_g8_still_threshold).state) still_gates_above_threshold++;
       
-      // Activation: 1 move AND 3 still gates
-      bool should_activate = (move_gates_above_threshold >= 1 && still_gates_above_threshold >= 3);
-      // Maintenance: 3 still gates only
-      bool should_maintain = (still_gates_above_threshold >= 3);
+      // Activation: ${ld2410_activation_move_gates} move AND ${ld2410_activation_still_gates} still gates
+      bool should_activate = (move_gates_above_threshold >= ${ld2410_activation_move_gates} && still_gates_above_threshold >= ${ld2410_activation_still_gates});
+      // Maintenance: ${ld2410_maintenance_still_gates} still gates only
+      bool should_maintain = (still_gates_above_threshold >= ${ld2410_maintenance_still_gates});
       
       if (should_activate) {
         presence_active = true;
