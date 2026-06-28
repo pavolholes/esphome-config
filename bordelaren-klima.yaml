@@ -1,4 +1,7 @@
 # CHANGES
+# 0.2 2026-06-28 Pavol
+#   - LD2410 presence: added explicit hysteresis logic overrides
+#     activation: 1 move + 3 still gates, maintenance: 3 still gates (default)
 # 0.1 2025-05-29 Pavol
 #   - initial version
 
@@ -20,6 +23,11 @@ substitutions:
   # UART: LD2410
   uart_ld2410_tx: GPIO17 # RX
   uart_ld2410_rx: GPIO16 # TX
+
+  # LD2410: explicit hysteresis logic (defaults from ld2410.yaml)
+  ld2410_activation_move_gates: "1"
+  ld2410_activation_still_gates: "3"
+  ld2410_maintenance_still_gates: "3"
 
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)

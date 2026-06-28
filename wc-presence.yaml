@@ -1,4 +1,7 @@
 # CHANGES
+# v0.2 Pavol Holes 2026-06-28
+#   - LD2410 presence: added explicit hysteresis logic overrides
+#     activation: 1 move + 3 still gates, maintenance: 3 still gates (default)
 # v0.1 Pavol Holes 2025-05-13
 #   - initial version
 
@@ -7,12 +10,17 @@ substitutions:
   friendly_name: WC Presence
   room: WC
   project_name: pavolholes.${friendly_name}
-  project_version: "0.1"
+  project_version: "0.2"
   device_type: ESP32-C3-super-mini
   
   # UART: LD2410
   uart_ld2410_tx: GPIO9 # GPIO21, GPIO3 were not working # RX
   uart_ld2410_rx: GPIO10 # GPIO20, GPIO4 were not working # TX
+
+  # LD2410: explicit hysteresis logic (defaults from ld2410.yaml)
+  ld2410_activation_move_gates: "1"
+  ld2410_activation_still_gates: "3"
+  ld2410_maintenance_still_gates: "3"
 
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)

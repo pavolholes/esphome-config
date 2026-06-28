@@ -9,7 +9,15 @@ substitutions:
   i2c_scl: GPIO22
   bme280_temperature_offset: "-4.4"
 
+  # LD2410: explicit hysteresis logic (defaults from ld2410.yaml)
+  ld2410_activation_move_gates: "1"
+  ld2410_activation_still_gates: "3"
+  ld2410_maintenance_still_gates: "3"
+
 # CHANGES
+# v0.3 2026-06-28 Pavol
+#   - LD2410 presence: added explicit hysteresis logic overrides
+#     activation: 1 move + 3 still gates, maintenance: 3 still gates (default for living room)
 # v0.2 2026-05-03
 #   - remote_receiver > binary_sensor: added on_press automation to publish Genius IR codes directly to MQTT
 #     Simplified from on_state with condition to direct on_press (inverted:true on remote_receiver fixes state detection)
@@ -77,6 +85,8 @@ binary_sensor:
     samsung:
       data: 0xE0E0F00F
       nbits: 32
+    filters:
+      - delayed_off: 100ms
     # on_press:
     #   - mqtt.publish:
     #       topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
