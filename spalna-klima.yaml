@@ -1,4 +1,9 @@
 # CHANGES
+# 0.4 2026-06-29 Pavol
+#   - LD2410 presence: increased activation move gates to 2
+#     activation: 2 move + 2 still gates
+#     Real movement (person entering bed) generates 5+ move gates
+#     Ambient noise generates only 1 move gate -> eliminates false positives
 # 0.3 2026-06-28 Pavol
 #   - LD2410 presence: override hysteresis logic for bedroom
 #     activation: 1 move + 2 still gates (instead of default 3 still)
@@ -29,7 +34,7 @@ substitutions:
   uart_ld2410_rx: GPIO16 # TX
 
   # LD2410: Bedroom-specific hysteresis (sleeping person is mostly static)
-  ld2410_activation_move_gates: "1"
+  ld2410_activation_move_gates: "2"
   ld2410_activation_still_gates: "2"
   ld2410_maintenance_still_gates: "2"
 
