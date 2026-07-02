@@ -56,31 +56,8 @@ packages:
   bme280: !include pavolholes_common/sensor/bme280.yaml
   ld2410: !include pavolholes_common/sensor/ld2410.yaml
 
-# LD2410: Override thresholds for gates 6-8 (outside room range, 4.5-6m)
-# Room is 3.5m from sensor, gates 6-8 generate noise causing false positives
-number:
-  - platform: ld2410
-    g6:
-      move_threshold:
-        id: number_ld2410_g6_move_threshold
-        initial_value: 100
-      still_threshold:
-        id: number_ld2410_g6_still_threshold
-        initial_value: 100
-    g7:
-      move_threshold:
-        id: number_ld2410_g7_move_threshold
-        initial_value: 100
-      still_threshold:
-        id: number_ld2410_g7_still_threshold
-        initial_value: 100
-    g8:
-      move_threshold:
-        id: number_ld2410_g8_move_threshold
-        initial_value: 100
-      still_threshold:
-        id: number_ld2410_g8_still_threshold
-        initial_value: 100
+# LD2410: Thresholds for gates 6-8 set to 100 via HA API (persistent in EEPROM)
+# Room is 3.5m from sensor, gates 6-8 (4.5-6m) are outside room and generate noise
 
 # logger:
 #   level: DEBUG  # (default is DEBUG; another option is VERY_VERBOSE)
