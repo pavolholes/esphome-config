@@ -1,4 +1,10 @@
 # CHANGES
+# 0.5 2026-07-02 Pavol
+#   - LD2410: disabled gates 6-8 (move & still thresholds set to 100)
+#     Room range is 3.5m from sensor, gates 6-8 (4.5-6m) are outside room
+#     These gates were generating noise (g7/g8 move energy 6) causing false positives
+#     activation: reverted to 1 move + 2 still gates (noise gates now disabled)
+#     maintenance: 2 still gates
 # 0.4 2026-06-29 Pavol
 #   - LD2410 presence: increased activation move gates to 2
 #     activation: 2 move + 2 still gates
@@ -34,7 +40,8 @@ substitutions:
   uart_ld2410_rx: GPIO16 # TX
 
   # LD2410: Bedroom-specific hysteresis (sleeping person is mostly static)
-  ld2410_activation_move_gates: "2"
+  # Gates 6-8 disabled (thresholds set to 100) - outside room range (3.5m)
+  ld2410_activation_move_gates: "1"
   ld2410_activation_still_gates: "2"
   ld2410_maintenance_still_gates: "2"
 
@@ -48,6 +55,32 @@ packages:
   bh1750: !include pavolholes_common/sensor/bh1750.yaml
   bme280: !include pavolholes_common/sensor/bme280.yaml
   ld2410: !include pavolholes_common/sensor/ld2410.yaml
+
+# LD2410: Override thresholds for gates 6-8 (outside room range, 4.5-6m)
+# Room is 3.5m from sensor, gates 6-8 generate noise causing false positives
+number:
+  - platform: ld2410
+    g6:
+      move_threshold:
+        id: number_ld2410_g6_move_threshold
+        initial_value: 100
+      still_threshold:
+        id: number_ld2410_g6_still_threshold
+        initial_value: 100
+    g7:
+      move_threshold:
+        id: number_ld2410_g7_move_threshold
+        initial_value: 100
+      still_threshold:
+        id: number_ld2410_g7_still_threshold
+        initial_value: 100
+    g8:
+      move_threshold:
+        id: number_ld2410_g8_move_threshold
+        initial_value: 100
+      still_threshold:
+        id: number_ld2410_g8_still_threshold
+        initial_value: 100
 
 # logger:
 #   level: DEBUG  # (default is DEBUG; another option is VERY_VERBOSE)
