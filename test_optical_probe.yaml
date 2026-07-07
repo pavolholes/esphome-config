@@ -42,8 +42,8 @@
 #       - uart.write: "2F3F210D0A"
 
 substitutions:
-  device_name: dvor-elektromer
-  friendly_name: Dvor Elektromer
+  device_name: test-optical-probe
+  friendly_name: Test
   room: Dvor
   project_name: pavolholes.${friendly_name}
   project_version: "0.3"
