@@ -33,16 +33,4 @@ uart:
                     direction == UART_DIRECTION_RX ? "RX" : "TX",
                     bytes.size(), hex_data.c_str());
 
-# WiFi
-wifi:
-  ssid: "PI_NoT"
-  # password: !secret wifi_password  # TODO: add password
-
-# API for logs - no encryption for test
-api:
-
-# OTA - no password for test
-ota:
-
-# Web server for easy access
-web_server:
+# No WiFi needed for USB serial UART test
