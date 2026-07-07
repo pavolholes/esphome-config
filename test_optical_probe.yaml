@@ -35,8 +35,8 @@ uart:
 
 # No WiFi needed for USB serial UART test
 
-# Interval to send IEC62056 request every 60 seconds
+# Interval to send IEC62056 request every 5 seconds
 interval:
-  - interval: 60s
+  - interval: 5s
     then:
       - uart.write: "2F3F210D0A"
