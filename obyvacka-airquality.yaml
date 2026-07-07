@@ -54,7 +54,7 @@ remote_receiver:
     number: GPIO26
     inverted: true
     mode: INPUT_PULLUP
-  dump: all #samsung #all
+  dump: samsung #all
 
 binary_sensor:
   - platform: remote_receiver
