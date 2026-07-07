@@ -1,3 +1,12 @@
+# CHANGES
+# v0.2 2026-07-07
+#   - fixed stop_action to only trigger relay on manual stop (when both endstops are OFF)
+#   - added on_state lambda actions to binary_sensors for manual cover state synchronization
+#   - changed binary_sensors to internal: True
+# v0.1 2026-04-15
+#   - initial version 
+
+# DOCUMENTATION
 # https://esphome.io/components/cover/endstop/
 
 substitutions:
@@ -18,6 +27,7 @@ cover:
     name: Ovladanie
     id: garaz_cover
     device_class: garage
+    # supported_features: 11 # NOT valid option for endstop cover, needs to be done directly in HA registry
     open_action:
       - switch.turn_on: garaz_switch
     open_duration: $garaz_ovladanie_open_duration
@@ -27,7 +37,12 @@ cover:
     close_duration: $garaz_ovladanie_close_duration
     close_endstop: garage_close_endstop_binary_sensor
     stop_action:
-      - switch.turn_off: garaz_switch
+      - if:
+          condition:
+            - binary_sensor.is_off: garage_open_endstop_binary_sensor
+            - binary_sensor.is_off: garage_close_endstop_binary_sensor
+          then:
+            - switch.turn_on: garaz_switch
 
 binary_sensor:
   # Reed switch - garáž ZATVORENÁ
@@ -40,6 +55,16 @@ binary_sensor:
     id: garage_close_endstop_binary_sensor
     filters:
       - delayed_on_off: $garaz_ovladanie_reed_switch_debounce_time
+    on_state:
+      - if:
+          condition:
+            - binary_sensor.is_on: garage_close_endstop_binary_sensor
+          then:
+            - lambda: |-
+                if (id(garaz_cover).current_operation != cover::COVER_OPERATION_IDLE || id(garaz_cover).position != 0.0) {
+                  id(garaz_cover).position = 0.0;
+                  id(garaz_cover).publish_state();
+                }
 
   # Reed switch - garáž OTVORENÁ
   - platform: gpio
@@ -51,6 +76,16 @@ binary_sensor:
     id: garage_open_endstop_binary_sensor
     filters:
       - delayed_on_off: $garaz_ovladanie_reed_switch_debounce_time
+    on_state:
+      - if:
+          condition:
+            - binary_sensor.is_on: garage_open_endstop_binary_sensor
+          then:
+            - lambda: |-
+                if (id(garaz_cover).current_operation != cover::COVER_OPERATION_IDLE || id(garaz_cover).position != 1.0) {
+                  id(garaz_cover).position = 1.0;
+                  id(garaz_cover).publish_state();
+                }
 
 switch:
   - platform: gpio
