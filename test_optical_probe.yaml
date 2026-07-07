@@ -50,7 +50,7 @@ substitutions:
   device_type: ESP32-C3-super-mini
 
   powermeter_iec62056_uart_rx: GPIO6  # GPIO3 - Hardware RX (biely vodič z senzora TXD)
-  powermeter_iec62056_uart_tx: TX  # GPIO1 - Hardware TX (žltý vodič z senzora RXD)
+  powermeter_iec62056_uart_tx: GPIO7  # GPIO1 - Hardware TX (žltý vodič z senzora RXD)
 
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)
