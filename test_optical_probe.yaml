@@ -47,7 +47,7 @@ substitutions:
   room: Dvor
   project_name: pavolholes.${friendly_name}
   project_version: "0.3"
-  device_type: ESP8266 D1mini
+  device_type: ESP
 
   powermeter_iec62056_uart_rx: RX  # GPIO3 - Hardware RX (biely vodič z senzora TXD)
   powermeter_iec62056_uart_tx: TX  # GPIO1 - Hardware TX (žltý vodič z senzora RXD)
