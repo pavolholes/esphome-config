@@ -20,6 +20,7 @@ substitutions:
   garaz_ovladanie_relay_pin_auto: GPIO10 # gpio pin that trigger the door opening/closing/stop
   garaz_ovladanie_close_endstop_pin: GPIO05 # gpio pin for close reed switch
   garaz_ovladanie_open_endstop_pin: GPIO06 # gpio pin for close reed switch
+  garaz_ovladanie_open_endstop_invered: "True"
 
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)
