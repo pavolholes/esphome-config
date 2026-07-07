@@ -43,7 +43,7 @@
 
 substitutions:
   device_name: test-optical-probe
-  friendly_name: Test
+  friendly_name: Test Optical Probe
   room: Dvor
   project_name: pavolholes.${friendly_name}
   project_version: "0.3"
