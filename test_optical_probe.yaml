@@ -1,0 +1,51 @@
+esphome:
+  name: test-optical-probe
+  friendly_name: Test Optical Probe
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+  level: DEBUG
+  logs:
+    uart: DEBUG
+    uart.debug: DEBUG
+
+# UART for optical probe - TX only for now (we'll test RX)
+uart:
+  rx_pin: GPIO6  # RX pin - connect white wire here
+  tx_pin: GPIO7  # TX pin - connect yellow wire here  
+  baud_rate: 300
+  data_bits: 7
+  parity: EVEN
+  stop_bits: 1
+  rx_buffer_size: 1024
+  debug:
+    direction: BOTH
+    dummy_receiver: false
+    sequence:
+      - lambda: |-
+          std::string hex_data = format_hex_pretty((uint8_t*)bytes.data(), bytes.size());
+          ESP_LOGI("uart.debug", "Direction: %s, Bytes: %d, Data: %s", 
+                    direction == UART_DIRECTION_RX ? "RX" : "TX",
+                    bytes.size(), hex_data.c_str());
+
+# WiFi
+wifi:
+  ssid: "PI_NoT"
+  password: !secret wifi_password
+
+# API for logs
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+# OTA
+ota:
+  password: !secret ota_password
+
+# Web server for easy access
+web_server:
