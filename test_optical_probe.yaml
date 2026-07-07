@@ -56,7 +56,7 @@ packages:
   # higher in the list is higher priority (can overwrite values from includes below)
   common: !include pavolholes_common/common.yaml
   # debug: !include pavolholes_common/debug.yaml
-  esp8266: !include pavolholes_common/esp8266.yaml
+  esp32-c3-super-mini: !include pavolholes_common/esp32-c3-super-mini.yaml
   web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
   # powermeter_sml: !include pavolholes_common/sensor/powermeter_sml.yaml
   powermeter_iec62056: !include pavolholes_common/sensor/powermeter_iec62056.yaml
