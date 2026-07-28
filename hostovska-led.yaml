@@ -21,22 +21,4 @@ packages:
   shellyRGBW2: !include pavolholes_common/shellyRGBW2.yaml
   gpio_button: !include pavolholes_common/binary_sensor/gpio_button.yaml
 
-
-binary_sensor:
-  - platform: gpio
-    id: button_debug
-    internal: true
-    pin:
-      number: ${button_pin}
-      mode: ${button_pullup}
-      inverted: ${button_inverted}
-    filters:
-      - delayed_on_off: 30ms
-    on_press:
-      - logger.log:
-          format: "[DEBUG] [${friendly_name}] Button PRESSED"
-          level: INFO
-    on_release:
-      - logger.log:
-          format: "[DEBUG] [${friendly_name}] Button RELEASED"
           level: INFO
