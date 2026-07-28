@@ -5,7 +5,7 @@ substitutions:
   project_name: pavolholes.${friendly_name}
   project_version: "0.4"
   device_type: Shelly RGBW2
-  pwm_pin: GPIO04
+  pwm_pin: GPIO15
   button_pin: GPIO5
   button_pullup: INPUT_PULLUP
   button_inverted: "True"
