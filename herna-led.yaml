@@ -17,7 +17,6 @@ packages:
   # higher in the list is higher priority (can overwrite values from includes below)
   common: !include pavolholes_common/common.yaml
   # debug: !include pavolholes_common/debug.yaml
-  web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
+  web_server: !include pavolholes_common/web_server.yaml
   shellyRGBW2: !include pavolholes_common/shellyRGBW2.yaml
   gpio_button: !include pavolholes_common/binary_sensor/gpio_button.yaml
-          level: INFO
