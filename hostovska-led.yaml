@@ -6,7 +6,7 @@ substitutions:
   project_version: "0.4"
   device_type: Shelly RGBW2
   pwm_pin: GPIO04
-  button_pin: GPIO12
+  button_pin: GPIO5
   button_pullup: INPUT_PULLUP
   button_inverted: "True"
   light_nightBrightnessLevel: "0.20"
