@@ -1,5 +1,5 @@
 substitutions:
-  comment_ld2410: "ld2410 v0.3.9"
+  comment_ld2410: "ld2410 v0.4.1"
   uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
@@ -15,6 +15,15 @@ substitutions:
 #     ld2410_activation_move_gates, ld2410_activation_still_gates, ld2410_maintenance_still_gates
 #     Allows per-device tuning (e.g. bedroom needs fewer still gates than living room)
 #   - default values keep original behavior: 1 move + 3 still to activate, 3 still to maintain
+# v0.4.1 Pavol Holes 2026-07-26
+#   - [interval] bypassed restart button with direct UART CMD_RESTART (0xA3) + 5s delay before query_params
+#     restart button only calls restart_and_read_all_info() which has 1s timeout (insufficient for LD2410 restart)
+#   - [globals] added ld2410_needs_restart bool flag for restart state tracking
+#   - [interval] changed threshold recovery from query_params to LD2410 restart
+#     query_params only queries current values without reinitializing the sensor
+#     restart forces full LD2410 reinitialization which properly restores thresholds
+#   - [button > ld2410 > restart] added explicit id (button_ld2410_restart) for lambda/script calls
+#   - renamed global last_query_params_time to last_ld2410_restart_time
 # v0.3.8 Pavol Holes 2026-06-28
 #   - [binary_sensor > ld2410_presence_custom > lambda] added safety check for invalid (NaN/negative) thresholds
 #     If gate thresholds are invalid (e.g. after power cycle/restart), presence is forced OFF
@@ -141,20 +150,44 @@ interval:
                 tag: "ld2410"
                 level: "INFO"
                 format: "Engineering Mode enabled on boot for gate energy availability"
-      # Query params if thresholds are invalid (e.g. after power cycle)
+      # Recover from invalid thresholds (e.g. after power cycle)
       - lambda: |-
-          bool thresholds_valid = !std::isnan(id(number_ld2410_g1_move_threshold).state) && 
-                                  id(number_ld2410_g1_move_threshold).state >= 0 &&
-                                  !std::isnan(id(number_ld2410_g2_still_threshold).state) && 
-                                  id(number_ld2410_g2_still_threshold).state >= 0;
-          if (!thresholds_valid) {
-            uint32_t elapsed = millis() - id(last_query_params_time);
-            if (id(last_query_params_time) == 0 || elapsed > 30000) {
-              ESP_LOGW("ld2410", "Invalid thresholds detected, querying LD2410 parameters...");
-              id(button_ld2410_query_params).press();
-              id(last_query_params_time) = millis();
+          float g0_move = id(number_ld2410_g0_move_threshold).state;
+          float g1_move = id(number_ld2410_g1_move_threshold).state;
+          float g2_still = id(number_ld2410_g2_still_threshold).state;
+          bool g0_valid = !std::isnan(g0_move) && g0_move >= 0;
+          bool g1_valid = !std::isnan(g1_move) && g1_move >= 0;
+          bool g2_valid = !std::isnan(g2_still) && g2_still >= 0;
+          bool all_valid = g0_valid && g1_valid && g2_valid;
+          
+          ESP_LOGD("ld2410", "Threshold check: g0_move=%.1f(%s) g1_move=%.1f(%s) g2_still=%.1f(%s)",
+                   g0_move, g0_valid ? "OK" : "BAD",
+                   g1_move, g1_valid ? "OK" : "BAD",
+                   g2_still, g2_valid ? "OK" : "BAD");
+          
+          if (!all_valid) {
+            uint32_t elapsed = millis() - id(last_ld2410_restart_time);
+            if (id(last_ld2410_restart_time) == 0 || elapsed > 60000) {
+              ESP_LOGW("ld2410", "Invalid thresholds! Sending LD2410 restart via UART...");
+              id(last_ld2410_restart_time) = millis();
+              id(ld2410_needs_restart) = true;
             }
           }
+      # Send restart command via UART if flagged
+      - if:
+          condition:
+            lambda: "return id(ld2410_needs_restart);"
+          then:
+            - uart.write:
+                id: uart_ld2410
+                # CMD_RESTART: Header(4) + Len=2(2) + CMD=0xA3(2) + Footer(4)
+                data: [0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0xA3, 0x00, 0x04, 0x03, 0x02, 0x01]
+            # Wait 5s for LD2410 to restart, then query params
+            - delay: 5000ms
+            - lambda: |-
+                ESP_LOGW("ld2410", "Querying LD2410 params after restart...");
+                id(button_ld2410_query_params).press();
+                id(ld2410_needs_restart) = false;
       # Watchdog: Check LD2410 sensor health
       - lambda: |
           // Check if LD2410 gate energy sensor has valid data (not NaN and >= 0)
@@ -583,6 +616,7 @@ button:
     factory_reset:
       name: LD2410 Factory Reset
     restart:
+      id: button_ld2410_restart
       name: LD2410 Restart
     query_params:
       id: button_ld2410_query_params
@@ -659,10 +693,15 @@ globals:
     type: uint32_t
     restore_value: no
     initial_value: '0'
-  - id: last_query_params_time
+  - id: last_ld2410_restart_time
     type: uint32_t
     restore_value: no
     initial_value: '0'
+  - id: ld2410_needs_restart
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
 
 script:
   - id: watchdog_restart

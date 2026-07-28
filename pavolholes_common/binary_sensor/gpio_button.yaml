@@ -38,11 +38,7 @@ binary_sensor:
     internal: True
     pin:
       number: ${button_pin}
-      # Pullup means it's switching ground (that's why it's inverted as well).
-      mode: ${button_pullup}
-      inverted: ${button_inverted}
     filters:
-      # - delayed_on: 50ms
-      - delayed_on_off: 30ms
-      # - invert:
+      - delayed_on: 50ms
+      - delayed_off: 50ms
     on_multi_click: !include { file: gpio_button_multiclick.yaml, vars: { light_id: light_pwm } }

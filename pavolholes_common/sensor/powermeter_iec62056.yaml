@@ -43,8 +43,10 @@ logger:
     uart.debug: DEBUG
 
 external_components:
-  # IEC62056 component
+  # IEC62056 component - official repository
   - source: github://aquaticus/esphome-iec62056
+  # Fix pre ESPHome 2026.2.0: UART class compatibility
+  # - source: github://michalholes/esphome-iec62056
 
 uart:
   # For ESP8266 it is highly recommended to use hardware UART. Software UART cannot handle transmissions faster than 4800 bps.

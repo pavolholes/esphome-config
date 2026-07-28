@@ -10,8 +10,8 @@ substitutions:
   project_version: "0.3"
   device_type: ESP8266 D1mini
 
-  powermeter_iec62056_uart_rx: RX #TX
-  powermeter_iec62056_uart_tx: TX #RX
+  powermeter_iec62056_uart_rx: RX  # GPIO3 - Hardware RX (biely vodič z senzora TXD)
+  powermeter_iec62056_uart_tx: TX  # GPIO1 - Hardware TX (žltý vodič z senzora RXD)
 
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)

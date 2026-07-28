@@ -3,13 +3,13 @@ substitutions:
   friendly_name: Spalna Svetlo
   room: Spalna
   project_name: pavolholes.${friendly_name}
-  project_version: "0.4"
+  project_version: "0.5"
   device_type: Shelly Dimmer2
   button_pin: GPIO14 #"GPIO12"
   max_power: "220.0" # watt
   max_temp: "70.0" # °C
   light_nightBrightnessLevel: "0.01"
-  light_eveningBrightnessLevel: "0.20"
+  light_eveningBrightnessLevel: "1.00"
   light_fadingStep: "0.05"
   # light_min_brightness: "250"
 

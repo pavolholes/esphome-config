@@ -154,5 +154,6 @@ sensor:
 
 button:
   - platform: restart
+    id: restart_button
     name: Restart
 

@@ -16,11 +16,13 @@ sensor:
     temperature:
       name: Teplota
       id: bme280_temperature
+      accuracy_decimals: 2
       oversampling: 16x
       filters:
         - filter_out: nan
         - offset: ${bme280_temperature_offset}
         - lambda: "return x + id(temperature_offset_ui).state;"
+        - round: 2
     pressure:
       name: Tlak
       id: bme280_pressure
