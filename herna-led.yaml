@@ -20,16 +20,3 @@ packages:
   web_server: !include pavolholes_common/web_server.yaml
   shellyRGBW2: !include pavolholes_common/shellyRGBW2.yaml
   gpio_button: !include pavolholes_common/binary_sensor/gpio_button.yaml
-
-
-# DEBUG: raw GPIO5 level
-sensor:
-  - platform: template
-    id: gpio5_raw
-    name: "${friendly_name} GPIO5 Raw"
-    update_interval: 1s
-    lambda: |-
-      return digitalRead(5);
-    unit_of_measurement: ""
-    accuracy_decimals: 0
-    state_class: measurement
