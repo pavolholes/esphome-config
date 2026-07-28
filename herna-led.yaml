@@ -7,8 +7,6 @@ substitutions:
   device_type: Shelly RGBW2
   pwm_pin: GPIO15
   button_pin: GPIO5
-  button_pullup: INPUT_PULLUP
-  button_inverted: "True"
   light_nightBrightnessLevel: "0.20"
   light_eveningBrightnessLevel: "0.50"
   light_fadingStep: "0.05"
