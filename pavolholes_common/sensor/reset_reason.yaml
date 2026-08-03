@@ -1,0 +1,4 @@
+# Reports the reason of the last boot/restart
+platform: debug
+reset_reason:
+  name: Restart Reason

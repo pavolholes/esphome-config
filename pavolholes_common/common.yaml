@@ -22,6 +22,8 @@ substitutions:
   comment_liquid: ""
 
 # CHANGES
+# v0.14 2026-08-02
+#   - added reset_reason text_sensor via debug component (reports reason of last boot/restart)
 # v0.13 2026-04-23
 #   - renamed substitution from common_deviceSpecific_comment to unique package-specific substitutions
 #   - added default empty substitutions for all package-specific comments
@@ -123,11 +125,13 @@ sun:
 logger:
   level: INFO # (default is DEBUG)
 
+debug:
+
 text_sensor:
   # Sensor with esphome version and fw build time
   - platform: version
     name: Version
-  
+
   # Extra wifi info from device
   - platform: wifi_info
     ip_address:
@@ -136,6 +140,9 @@ text_sensor:
       name: SSID
     # bssid:
       # name: BSSID
+
+  # Reports the reason of the last boot/restart
+  - <<: !include sensor/reset_reason.yaml
 
   # # Uptime text sensor which is updated by the sensor id: uptime_sensor
   # - platform: template
