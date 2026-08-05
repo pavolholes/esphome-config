@@ -151,6 +151,8 @@ interval:
                 level: "INFO"
                 format: "Engineering Mode enabled on boot for gate energy availability"
       # Recover from invalid thresholds (e.g. after power cycle)
+      # Query-only recovery: a plain query (read_all_info) immediately restores all
+      # threshold values once the LD2410 answers. No UART restart needed.
       - lambda: |-
           float g0_move = id(number_ld2410_g0_move_threshold).state;
           float g1_move = id(number_ld2410_g1_move_threshold).state;
@@ -159,35 +161,15 @@ interval:
           bool g1_valid = !std::isnan(g1_move) && g1_move >= 0;
           bool g2_valid = !std::isnan(g2_still) && g2_still >= 0;
           bool all_valid = g0_valid && g1_valid && g2_valid;
-          
-          ESP_LOGD("ld2410", "Threshold check: g0_move=%.1f(%s) g1_move=%.1f(%s) g2_still=%.1f(%s)",
-                   g0_move, g0_valid ? "OK" : "BAD",
-                   g1_move, g1_valid ? "OK" : "BAD",
-                   g2_still, g2_valid ? "OK" : "BAD");
-          
+          ESP_LOGD("ld2410", "Threshold check: g0=%s g1=%s g2=%s", g0_valid?"OK":"BAD", g1_valid?"OK":"BAD", g2_valid?"OK":"BAD");
           if (!all_valid) {
             uint32_t elapsed = millis() - id(last_ld2410_restart_time);
             if (id(last_ld2410_restart_time) == 0 || elapsed > 60000) {
-              ESP_LOGW("ld2410", "Invalid thresholds! Sending LD2410 restart via UART...");
+              ESP_LOGW("ld2410", "Invalid thresholds! Pressing query_params to recover...");
               id(last_ld2410_restart_time) = millis();
-              id(ld2410_needs_restart) = true;
+              id(button_ld2410_query_params).press();
             }
           }
-      # Send restart command via UART if flagged
-      - if:
-          condition:
-            lambda: "return id(ld2410_needs_restart);"
-          then:
-            - uart.write:
-                id: uart_ld2410
-                # CMD_RESTART: Header(4) + Len=2(2) + CMD=0xA3(2) + Footer(4)
-                data: [0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0xA3, 0x00, 0x04, 0x03, 0x02, 0x01]
-            # Wait 5s for LD2410 to restart, then query params
-            - delay: 5000ms
-            - lambda: |-
-                ESP_LOGW("ld2410", "Querying LD2410 params after restart...");
-                id(button_ld2410_query_params).press();
-                id(ld2410_needs_restart) = false;
       # Watchdog: Check LD2410 sensor health
       - lambda: |
           // Check if LD2410 gate energy sensor has valid data (not NaN and >= 0)
