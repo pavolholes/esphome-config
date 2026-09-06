@@ -1,4 +1,6 @@
 # CHANGES
+# 0.2 2026-09-06
+#   - fix inverted logic for reed endstops (GPIO05/06): set to True to match Prva and NO reed wiring (GND switching with INPUT_PULLUP)
 # 0.1 2026-07-06
 #   - initial version
 
@@ -7,7 +9,7 @@ substitutions:
   friendly_name: Hangar Garaz Druha
   room: Hangar
   project_name: pavolholes.${friendly_name}
-  project_version: "0.1"
+  project_version: "0.2"
   device_type: ESP32-C3-super-mini
   
   button_pin: GPIO1
@@ -19,9 +21,9 @@ substitutions:
   garaz_ovladanie_close_duration: 19s
   garaz_ovladanie_relay_pin_auto: GPIO10 # gpio pin that trigger the door opening/closing/stop
   garaz_ovladanie_close_endstop_pin: GPIO05 # gpio pin for close reed switch (GPIO20 doesn't work)
-  garaz_ovladanie_close_endstop_invered: "False" # brown reed switch is Normaly Open
+  garaz_ovladanie_close_endstop_invered: "True" # brown reed switch is Normally Open - fix: was False, inverted opposite to Prva
   garaz_ovladanie_open_endstop_pin: GPIO06 # gpio pin for close reed switch  (GPIO20 doesn't work)
-  garaz_ovladanie_open_endstop_invered: "False" # brown reed switch is Normaly Open
+  garaz_ovladanie_open_endstop_invered: "True" # brown reed switch is Normally Open - fix: was False
 
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)
