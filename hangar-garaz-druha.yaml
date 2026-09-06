@@ -1,4 +1,8 @@
 # CHANGES
+# 0.7 2026-09-06
+#   - final clean: remove diag, keep inverted True fix - HA stale logs cleared via esphome restart, verified closed/open correct
+# 0.6 2026-09-06
+#   - re-expose reed diag to investigate false open when gate closed
 # 0.5 2026-09-06
 #   - final: remove diag sensors, keep inverted fix (0.2) - verified open/close endstops correct via 0.4 diag
 # 0.4 2026-09-06
@@ -15,7 +19,7 @@ substitutions:
   friendly_name: Hangar Garaz Druha
   room: Hangar
   project_name: pavolholes.${friendly_name}
-  project_version: "0.5"
+  project_version: "0.7"
   device_type: ESP32-C3-super-mini
   
   button_pin: GPIO1
