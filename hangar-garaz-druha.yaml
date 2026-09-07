@@ -1,4 +1,16 @@
 # CHANGES
+# 0.13 2026-09-06
+#   - final clean both False verified - close ON when gate closed, open ON when gate open, cover actions correct per user test
+# 0.12 2026-09-06
+#   - both False to match user observation close OFF open ON
+# 0.11 2026-09-06
+#   - test close False open True original pins - user reports close zopnuty OFF
+# 0.10 2026-09-06
+#   - swap open/close pins to test - user reports open causes close and reeds inverted
+# 0.9 2026-09-06
+#   - flip inverted to False per user observation - close zopnuty OFF, open rozopnuty ON, cover actions inverted
+# 0.8 2026-09-06
+#   - re-expose reed diag - gate reports open while physically closed
 # 0.7 2026-09-06
 #   - final clean: remove diag, keep inverted True fix - HA stale logs cleared via esphome restart, verified closed/open correct
 # 0.6 2026-09-06
@@ -19,7 +31,7 @@ substitutions:
   friendly_name: Hangar Garaz Druha
   room: Hangar
   project_name: pavolholes.${friendly_name}
-  project_version: "0.7"
+  project_version: "0.13"
   device_type: ESP32-C3-super-mini
   
   button_pin: GPIO1
@@ -31,9 +43,9 @@ substitutions:
   garaz_ovladanie_close_duration: 19s
   garaz_ovladanie_relay_pin_auto: GPIO10 # gpio pin that trigger the door opening/closing/stop
   garaz_ovladanie_close_endstop_pin: GPIO05 # gpio pin for close reed switch (GPIO20 doesn't work)
-  garaz_ovladanie_close_endstop_invered: "True" # brown reed switch is Normally Open - fix: was False, inverted opposite to Prva
+  garaz_ovladanie_close_endstop_invered: "False" # brown reed switch is Normally Open - per user test close zopnuty OFF is correct with False
   garaz_ovladanie_open_endstop_pin: GPIO06 # gpio pin for close reed switch  (GPIO20 doesn't work)
-  garaz_ovladanie_open_endstop_invered: "True" # brown reed switch is Normally Open - fix: was False
+  garaz_ovladanie_open_endstop_invered: "False" # brown reed switch is Normally Open - per user test open rozopnuty ON is correct with False
 
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)
