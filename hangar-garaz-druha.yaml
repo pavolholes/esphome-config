@@ -1,4 +1,6 @@
 # CHANGES
+# 0.14 2026-09-06
+#   - remove BLE proxy to lower internal temp (80.9C in waterproof box above motor)
 # 0.13 2026-09-06
 #   - final clean both False verified - close ON when gate closed, open ON when gate open, cover actions correct per user test
 # 0.12 2026-09-06
@@ -31,7 +33,7 @@ substitutions:
   friendly_name: Hangar Garaz Druha
   room: Hangar
   project_name: pavolholes.${friendly_name}
-  project_version: "0.13"
+  project_version: "0.14"
   device_type: ESP32-C3-super-mini
   
   button_pin: GPIO1
@@ -55,7 +57,7 @@ packages:
   # esp32: !include pavolholes_common/esp32.yaml
   esp32-c3-super-mini: !include pavolholes_common/esp32-c3-super-mini.yaml
   garaz-ovladanie: !include pavolholes_common/garaz-ovladanie.yaml
-  esp32BluetoothProxy: !include pavolholes_common/esp32BluetoothProxy.yaml # including this changes the framework so the first time it have to be loaded to ESP using USB cable, not OTA!
+  # esp32BluetoothProxy: !include pavolholes_common/esp32BluetoothProxy.yaml # disabled to lower temp - Prva keeps proxy for Hangar coverage # including this changes the framework so the first time it have to be loaded to ESP using USB cable, not OTA!
 
 binary_sensor:
   - platform: gpio
