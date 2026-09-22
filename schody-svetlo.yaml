@@ -10,7 +10,7 @@ substitutions:
   button_pin: GPIO14
   button_pullup: INPUT_PULLUP
   button_inverted: "True"
-  light_initialBrightnessLevel: "0.01" # single-click turn-on at evening-night (was night level)
+  light_initialBrightnessLevel: "0.01" # single-click turn-on brightness at night
   light_nightBrightnessLevel: "0.01"
   light_eveningBrightnessLevel: "0.20"
   light_fadingStep: "0.05"
