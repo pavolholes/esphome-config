@@ -12,7 +12,7 @@ substitutions:
   pwm_pin2: GPIO17 # predsien LED
   button_pin: GPIO18
   # NOTE: button_pullup-button_inverted subs are ignored by the gpio_button package pin block (it only sets pin number). Real pin mode-inverted for this device is set in the wall_button extend block at end of file.
-  light_initialBrightnessLevel: "1.00" # single-click turn-on at evening-night (preserves previous 100%)
+  light_initialBrightnessLevel: "1.00" # single-click turn-on brightness at night (preserves previous 100%)
   light_nightBrightnessLevel: "0.20" # double-click dim level + long-click lower bound (was 1.00 = double-click no-op)
   light_eveningBrightnessLevel: "1.00"
   light_fadingStep: "0.05"
