@@ -7,26 +7,32 @@
 # REQUIRED substitutions (must be defined by the device using this file):
 #   light_id                   - id of the light managed by this button
 #   light_initialBrightnessLevel - brightness used by Single Short Click when
-#                                turning the light ON while the evening/night
-#                                time helpers are ON (e.g. "1.00" = full,
-#                                "0.20" = dim). Decoupled from the dim level so
-#                                turn-on brightness and double-click dim level
-#                                can be tuned independently per device.
+#                                turning the light ON at night, i.e. while
+#                                ha_time_for_lights_night is ON
+#                                (e.g. "1.00" = full, "0.20" = dim). Decoupled
+#                                from the dim level so turn-on brightness and
+#                                double-click dim level can be tuned
+#                                independently per device.
+#   light_eveningBrightnessLevel - brightness used by Single Short Click when
+#                                turning the light ON in the evening, i.e. while
+#                                ha_time_for_lights_evening is ON.
 #   light_nightBrightnessLevel - dim brightness level used in two places:
 #                                1) lower bound of the Single Long Click fade loop
 #                                2) the dim side of the Double Short Click cycle
-#                                (dim <-> 100%)
+#                                (dim <-> 100%), at any time of day
+#                                (including evening)
 #   light_fadingStep           - brightness step of the Single Long Click fade loop
 #
-# NOTE: light_eveningBrightnessLevel may still be defined by devices for
-# compatibility, but this file no longer uses it - both evening and night
-# turn-on now use light_initialBrightnessLevel. The evening/night helpers
-# (ha_time_for_lights_evening/ha_time_for_lights_night) are still used below
-# as time conditions; only the brightness VALUE source changed.
+# NOTE: the evening/night helpers (ha_time_for_lights_evening /
+# ha_time_for_lights_night) gate the time windows; the brightness VALUE for
+# turn-on comes from light_initialBrightnessLevel (night) and
+# light_eveningBrightnessLevel (evening), while double-click always dims to
+# light_nightBrightnessLevel.
 #
 # Button has three actions:
-#   - Single Short Click - toggle light on/off; when turning on while a time
-#     helper is ON, use light_initialBrightnessLevel, otherwise 100%.
+#   - Single Short Click - toggle light on/off; when turning on at night use
+#     light_initialBrightnessLevel, in the evening light_eveningBrightnessLevel,
+#     otherwise 100%.
 #   - Single Long Click - while holding the button the brightness is changed
 #     between light_nightBrightnessLevel and 100%; when released the brightness
 #     change stops.
@@ -68,7 +74,7 @@
 
           // BELOW is to cycle brigthness anything > evening > night > evening > max > evening > night ...
           // (abandoned experiment, kept for reference - needs an evening-level
-          // variable which this file no longer uses, see NOTE in header)
+          // variable in the lambda, which the active code above does not use)
           // static bool fadeUp = true;
           // if (currentBrightness != eveningBrightness) {
           //     ESP_LOGI("main", "[${friendly_name} Button Double Short Clicked] Current brightness is [%.2f] which is not equal to [%.2f]. Setting brightness to [%.2f].", currentBrightness, eveningBrightness, eveningBrightness);
@@ -141,7 +147,8 @@
           - light.turn_off: ${light_id}
         else:
           # Light is off -> turn it on. Brightness depends on time of day:
-          # evening/night -> initial brightness, day -> full brightness.
+          # night -> initial brightness, evening -> evening brightness,
+          # day -> full brightness.
           - logger.log:
               format: "[${friendly_name} Button Single Short Clicked] Light is off, so turn it on..."
               level: INFO
@@ -161,11 +168,11 @@
                       - binary_sensor.is_on: ha_time_for_lights_evening
                     then:
                       - logger.log:
-                          format: "[${friendly_name} Button Single Short Clicked] Evening time helper is ON, setting brightness to ${light_initialBrightnessLevel}."
+                          format: "[${friendly_name} Button Single Short Clicked] Evening time helper is ON, setting brightness to ${light_eveningBrightnessLevel}."
                           level: INFO
                       - light.turn_on:
                           id: ${light_id}
-                          brightness: ${light_initialBrightnessLevel}
+                          brightness: ${light_eveningBrightnessLevel}
                     else:
                       - logger.log:
                           format: "[${friendly_name} Button Single Short Clicked] No time helper is ON, setting brightness to 1.00."
