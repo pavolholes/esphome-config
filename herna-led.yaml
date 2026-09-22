@@ -7,6 +7,7 @@ substitutions:
   device_type: Shelly RGBW2
   pwm_pin: GPIO15
   button_pin: GPIO5
+  light_initialBrightnessLevel: "0.20" # single-click turn-on at evening-night (was night level)
   light_nightBrightnessLevel: "0.20"
   light_eveningBrightnessLevel: "0.50"
   light_fadingStep: "0.05"
