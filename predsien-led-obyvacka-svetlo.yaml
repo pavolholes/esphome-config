@@ -66,65 +66,11 @@ light:
     restore_mode: ALWAYS_OFF #RESTORE_DEFAULT_OFF
     gamma_correct: 1.0 # to start brightness at 0.01 not at 0.18
 
-# diagnostic - find correct button pin
+# wall_button pin override: package pin block ignores mode/inverted subs, set explicitly here (button = pin-to-VCC: idle LOW, pressed HIGH)
 binary_sensor:
   - platform: gpio
-    name: "Diag GPIO1"
-    id: diag_gpio1
+    id: wall_button
     pin:
-      number: GPIO1
-      mode: INPUT_PULLUP
+      number: GPIO18
+      mode: INPUT_PULLDOWN
       inverted: true
-    filters:
-      - delayed_on: 50ms
-      - delayed_off: 50ms
-    on_state:
-      - logger.log:
-          format: "[DIAG GPIO1] %s"
-          level: INFO
-          args: ['ONOFF(x)']
-  - platform: gpio
-    name: "Diag GPIO5"
-    id: diag_gpio5
-    pin:
-      number: GPIO5
-      mode: INPUT_PULLUP
-      inverted: true
-    filters:
-      - delayed_on: 50ms
-      - delayed_off: 50ms
-    on_state:
-      - logger.log:
-          format: "[DIAG GPIO5] %s"
-          level: INFO
-          args: ['ONOFF(x)']
-  - platform: gpio
-    name: "Diag GPIO12"
-    id: diag_gpio12
-    pin:
-      number: GPIO12
-      mode: INPUT_PULLUP
-      inverted: true
-    filters:
-      - delayed_on: 50ms
-      - delayed_off: 50ms
-    on_state:
-      - logger.log:
-          format: "[DIAG GPIO12] %s"
-          level: INFO
-          args: ['ONOFF(x)']
-  - platform: gpio
-    name: "Diag GPIO14"
-    id: diag_gpio14
-    pin:
-      number: GPIO14
-      mode: INPUT_PULLUP
-      inverted: true
-    filters:
-      - delayed_on: 50ms
-      - delayed_off: 50ms
-    on_state:
-      - logger.log:
-          format: "[DIAG GPIO14] %s"
-          level: INFO
-          args: ['ONOFF(x)']
