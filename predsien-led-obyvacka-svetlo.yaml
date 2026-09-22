@@ -66,10 +66,10 @@ light:
     restore_mode: ALWAYS_OFF #RESTORE_DEFAULT_OFF
     gamma_correct: 1.0 # to start brightness at 0.01 not at 0.18
 
-# wall_button pin override: package pin block ignores mode/inverted subs, set explicitly here (button = pin-to-VCC: idle LOW, pressed HIGH)
+# wall_button pin fix via extend (package pin block ignores mode/inverted subs;
+# button = pin-to-VCC: idle LOW, pressed HIGH)
 binary_sensor:
-  - platform: gpio
-    id: wall_button
+  - id: !extend wall_button
     pin:
       number: GPIO18
       mode: INPUT_PULLDOWN
