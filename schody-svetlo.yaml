@@ -8,8 +8,9 @@ substitutions:
   pwm_pin: GPIO17
   pwm_pin2: GPIO18
   button_pin: GPIO14
-  button_pullup: INPUT_PULLUP
-  button_inverted: "True"
+  # NOTE: button_pullup/button_inverted subs are ignored by the gpio_button
+  # package pin block (it only sets pin number). Real pin mode/inverted
+  # for this device is set in the wall_button extend block at end of file.
   light_initialBrightnessLevel: "0.01" # single-click turn-on brightness at night
   light_nightBrightnessLevel: "0.01"
   light_eveningBrightnessLevel: "0.20"
@@ -83,3 +84,11 @@ light:
     restore_mode: ALWAYS_OFF #RESTORE_DEFAULT_OFF
     gamma_correct: 1.0 # to start brightness at 0.01 not at 0.18
 
+# wall_button pin fix via extend (package pin block ignores mode/inverted subs;
+# button = pin-to-VCC: idle LOW, pressed HIGH - same wiring as predsien button)
+binary_sensor:
+  - id: !extend wall_button
+    pin:
+      number: GPIO14
+      mode: INPUT_PULLDOWN
+      inverted: true
