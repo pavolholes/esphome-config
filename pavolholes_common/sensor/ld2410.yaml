@@ -1,5 +1,5 @@
 substitutions:
-  comment_ld2410: "ld2410 v0.4.1"
+  comment_ld2410: "ld2410 v0.4.2"
   uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
@@ -15,6 +15,12 @@ substitutions:
 #     ld2410_activation_move_gates, ld2410_activation_still_gates, ld2410_maintenance_still_gates
 #     Allows per-device tuning (e.g. bedroom needs fewer still gates than living room)
 #   - default values keep original behavior: 1 move + 3 still to activate, 3 still to maintain
+# v0.4.2 Muse Spark 2026-10-01
+#   - [interval] threshold recovery: aggressive retry during first 3 min after boot
+#     (every interval run), throttled to 60s afterwards. Covers the race where ESP
+#     boots before LD2410 answers queries after a breaker power cycle.
+#     Recovery stays query-only (press query_params); manual test proved plain query
+#     restores thresholds, no UART restart needed.
 # v0.4.1 Pavol Holes 2026-07-26
 #   - [interval] bypassed restart button with direct UART CMD_RESTART (0xA3) + 5s delay before query_params
 #     restart button only calls restart_and_read_all_info() which has 1s timeout (insufficient for LD2410 restart)
@@ -151,8 +157,10 @@ interval:
                 level: "INFO"
                 format: "Engineering Mode enabled on boot for gate energy availability"
       # Recover from invalid thresholds (e.g. after power cycle)
-      # Query-only recovery: a plain query (read_all_info) immediately restores all
-      # threshold values once the LD2410 answers. No UART restart needed.
+      # Query-only recovery: a plain query (read_all_info) restores all threshold
+      # values once the LD2410 answers. No UART restart needed.
+      # Boot window: retry on every run during the first 3 min after boot (LD2410
+      # may still be booting and deaf to queries), throttled to 60s afterwards.
       - lambda: |-
           float g0_move = id(number_ld2410_g0_move_threshold).state;
           float g1_move = id(number_ld2410_g1_move_threshold).state;
@@ -163,8 +171,10 @@ interval:
           bool all_valid = g0_valid && g1_valid && g2_valid;
           ESP_LOGD("ld2410", "Threshold check: g0=%s g1=%s g2=%s", g0_valid?"OK":"BAD", g1_valid?"OK":"BAD", g2_valid?"OK":"BAD");
           if (!all_valid) {
-            uint32_t elapsed = millis() - id(last_ld2410_restart_time);
-            if (id(last_ld2410_restart_time) == 0 || elapsed > 60000) {
+            uint32_t now = millis();
+            uint32_t elapsed = now - id(last_ld2410_restart_time);
+            uint32_t throttle_ms = (now < 180000) ? 10000 : 60000;
+            if (id(last_ld2410_restart_time) == 0 || elapsed >= throttle_ms) {
               ESP_LOGW("ld2410", "Invalid thresholds! Pressing query_params to recover...");
               id(last_ld2410_restart_time) = millis();
               id(button_ld2410_query_params).press();
