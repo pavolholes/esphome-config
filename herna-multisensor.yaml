@@ -1,4 +1,6 @@
 # CHANGES
+# v0.3 2026-10-02
+#   - occupancy now uses LD2420 only; removed GPIO PIR
 # v0.2 Pavol Holes 2025-01-27
 #   - added motion sensor
 # v0.1 Pavol Holes 2025-01-08
@@ -9,7 +11,7 @@ substitutions:
   friendly_name: Herna Multisensor
   room: Herna
   project_name: pavolholes.${friendly_name}
-  project_version: "0.2"
+  project_version: "0.3"
   device_type: ESP32-C3-super-mini
   
   # I2C: BME280 (H&T&P), BH1750 (lux)
@@ -21,8 +23,6 @@ substitutions:
   ld2420_uart_tx: GPIO6 # GPIO21 was not working # RX
   ld2420_uart_rx: GPIO7 # GPIO20 was not working # TX
 
-  # Motion sensor small
-  motion_pin: GPIO3
 
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)
@@ -35,7 +35,6 @@ packages:
   bh1750: !include pavolholes_common/sensor/bh1750.yaml
   bme280: !include pavolholes_common/sensor/bme280.yaml
   ld2420: !include pavolholes_common/sensor/ld2420.yaml
-  gpio_motion: !include pavolholes_common/binary_sensor/gpio_motion.yaml
 
 # Extend included sensors
 # https://esphome.io/guides/configuration-types.html#extend
@@ -43,17 +42,6 @@ packages:
 #   - id: !extend bme280_temperature
 #     filters:
 #       - offset: -4.50
-
-# Motion sensor set GPIO4 to GND for power supply
-output:
-  - platform: gpio
-    pin: GPIO4
-    id: motion_gnd
-esphome:
-  on_boot:
-  - priority: 90
-    then:
-    - output.turn_off: motion_gnd
 
 binary_sensor:
   - platform: template
@@ -65,15 +53,7 @@ binary_sensor:
     on_state:
       - lambda: 'id(illuminance_sensor).update();'
     lambda: |-
-      if ( id(ld2420_presence).state or id(binary_sensor_motion).state) {
-        return true;
-      } 
-      else if (id(ld2420_presence).state == 0 and id(binary_sensor_motion).state == 0) {
-        return false;
-      } 
-      else {
-        return id(occupancy).state;
-      }
+      return id(ld2420_presence).state;
 
 number:
   - platform: template
