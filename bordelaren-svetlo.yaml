@@ -9,6 +9,7 @@ substitutions:
   max_power: "220.0" # watt
   max_temp: "70.0" # °C
   light_nightBrightnessLevel: "0.01"
+  light_initialBrightnessLevel: "0.01" # single-click turn-on brightness at night
   light_eveningBrightnessLevel: "0.20"
   light_fadingStep: "0.05"
   light_min_brightness: "250"
