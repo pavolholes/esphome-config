@@ -3,8 +3,8 @@ substitutions:
   friendly_name: Predsien Display
   room: Predsien
   project_name: pavolholes.${friendly_name}
-  project_version: "0.1"
-  device_type: LILYGO T-Display S3 AMOLED Touch v0.1
+  project_version: "0.5"
+  device_type: LILYGO T-Display S3 AMOLED Touch v0.5
 
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)
@@ -27,87 +27,673 @@ lvgl:
       widgets:
         - obj:
             align: CENTER
-            width: 228
-            height: 250
-            pad_all: 10
+            width: 524
+            height: 228
+            pad_all: 8
+            bg_color: 0x000000
+            border_width: 0
+            border_color: 0x000000
+            outline_width: 0
+            scrollbar_mode: "off"
             layout:
               pad_column: 0
               type: GRID
-              grid_rows: [FR(48), FR(13), FR(13), FR(13), FR(13)]
-              grid_columns: [FR(10), FR(40), FR(40), FR(10)]
+              grid_rows: [FR(22), FR(39), FR(39)]
+              grid_columns: [FR(26), FR(8), FR(28), FR(8), FR(30)]
             widgets:
               - label:
                   text: "\U000F14E4"
                   id: lbl_weather_forecast_condition_icon
                   text_font: icons_100
+                  text_color: 0xFFFFFF
                   text_align: CENTER
                   grid_cell_row_pos: 0
+                  grid_cell_row_span: 3
                   grid_cell_column_pos: 0
-                  grid_cell_column_span: 2
                   grid_cell_x_align: CENTER
-                  grid_cell_y_align: START
+                  grid_cell_y_align: CENTER
 
               - label:
                   text: "Unknown"
                   id: lbl_weather_forecast_condition_name
+                  text_font: sans_34_bold
+                  text_color: 0xFFFFFF
                   text_align: CENTER
                   grid_cell_row_pos: 0
-                  grid_cell_column_pos: 2
-                  grid_cell_column_span: 2
-                  grid_cell_x_align: STRETCH
+                  grid_cell_column_pos: 1
+                  grid_cell_column_span: 4
+                  grid_cell_x_align: CENTER
                   grid_cell_y_align: CENTER
 
               - label:
-                  text: "Feels like:"
+                  text: "\U000F050F"
+                  text_font: icons_40
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
                   grid_cell_row_pos: 1
                   grid_cell_column_pos: 1
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
 
               - label:
-                  text: "--.- °C"
-                  id: lbl_weather_forecast_tempap
-                  text_align: RIGHT
-                  grid_cell_row_pos: 1
-                  grid_cell_column_pos: 2
-                  grid_cell_x_align: STRETCH
-
-              - label:
-                  text: "Maximum:"
-                  grid_cell_row_pos: 2
-                  grid_cell_column_pos: 1
-
-              - label:
-                  text: "--.- °C"
-                  id: lbl_weather_forecast_temphi
-                  text_align: RIGHT
-                  grid_cell_row_pos: 2
-                  grid_cell_column_pos: 2
-                  grid_cell_x_align: STRETCH
-
-              - label:
-                  text: "Minimum:"
-                  grid_cell_row_pos: 3
-                  grid_cell_column_pos: 1
-
-              - label:
-                  text: "--.- °C"
-                  id: lbl_weather_forecast_templo
-                  text_align: RIGHT
-                  grid_cell_row_pos: 3
-                  grid_cell_column_pos: 2
-                  grid_cell_x_align: STRETCH
-
-              - label:
-                  text: "Now:"
-                  grid_cell_row_pos: 4
-                  grid_cell_column_pos: 1
-
-              - label:
-                  text: "--.- °C"
+                  text: "--.-°C"
                   id: lbl_weather_outdnoor_now
-                  text_align: RIGHT
+                  text_font: sans_34_bold
+                  text_color: 0xFFFFFF
+                  text_align: LEFT
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: START
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "\U000F10C2"
+                  text_font: icons_40
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 3
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--.-°C"
+                  id: lbl_weather_forecast_temphi
+                  text_font: sans_34_bold
+                  text_color: 0xFFFFFF
+                  text_align: LEFT
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 4
+                  grid_cell_x_align: START
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "\U000F0004"
+                  text_font: icons_40
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 1
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--.-°C"
+                  id: lbl_weather_forecast_tempap
+                  text_font: sans_34_bold
+                  text_color: 0xFFFFFF
+                  text_align: LEFT
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: START
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "\U000F10C9"
+                  text_font: icons_40
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 3
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--.-°C"
+                  id: lbl_weather_forecast_templo
+                  text_font: sans_34_bold
+                  text_color: 0xFFFFFF
+                  text_align: LEFT
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 4
+                  grid_cell_x_align: START
+                  grid_cell_y_align: CENTER
+
+    - id: forecast_hourly
+      widgets:
+        - obj:
+            align: CENTER
+            width: 524
+            height: 228
+            pad_all: 8
+            bg_color: 0x000000
+            border_width: 0
+            border_color: 0x000000
+            outline_width: 0
+            scrollbar_mode: "off"
+            layout:
+              pad_column: 0
+              type: GRID
+              grid_rows: [FR(10), FR(12), FR(17), FR(33), FR(14), FR(14)]
+              grid_columns: [FR(20), FR(20), FR(20), FR(20), FR(20)]
+            widgets:
+              - label:
+                  text: "Dnes po hodinach"
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 0
+                  grid_cell_column_pos: 0
+                  grid_cell_column_span: 5
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--h"
+                  id: lbl_h1_time
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 0
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--°"
+                  id: lbl_h1_temp
+                  text_font: sans_26_bold
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 0
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - bar:
+                  id: bar_h1
+                  width: 36
+                  height: 56
+                  min_value: -20
+                  max_value: 40
+                  value: 15
+                  radius: 0
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 0
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--%"
+                  id: lbl_h1_precip
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 4
+                  grid_cell_column_pos: 0
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--h"
+                  id: lbl_h2_time
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 1
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--°"
+                  id: lbl_h2_temp
+                  text_font: sans_26_bold
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 1
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - bar:
+                  id: bar_h2
+                  width: 36
+                  height: 56
+                  min_value: -20
+                  max_value: 40
+                  value: 15
+                  radius: 0
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 1
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--%"
+                  id: lbl_h2_precip
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 4
+                  grid_cell_column_pos: 1
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--h"
+                  id: lbl_h3_time
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--°"
+                  id: lbl_h3_temp
+                  text_font: sans_26_bold
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - bar:
+                  id: bar_h3
+                  width: 36
+                  height: 56
+                  min_value: -20
+                  max_value: 40
+                  value: 15
+                  radius: 0
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--%"
+                  id: lbl_h3_precip
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
                   grid_cell_row_pos: 4
                   grid_cell_column_pos: 2
-                  grid_cell_x_align: STRETCH
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--h"
+                  id: lbl_h4_time
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 3
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--°"
+                  id: lbl_h4_temp
+                  text_font: sans_26_bold
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 3
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - bar:
+                  id: bar_h4
+                  width: 36
+                  height: 56
+                  min_value: -20
+                  max_value: 40
+                  value: 15
+                  radius: 0
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 3
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--%"
+                  id: lbl_h4_precip
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 4
+                  grid_cell_column_pos: 3
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--h"
+                  id: lbl_h5_time
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 4
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--°"
+                  id: lbl_h5_temp
+                  text_font: sans_26_bold
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 4
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - bar:
+                  id: bar_h5
+                  width: 36
+                  height: 56
+                  min_value: -20
+                  max_value: 40
+                  value: 15
+                  radius: 0
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 4
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--%"
+                  id: lbl_h5_precip
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 4
+                  grid_cell_column_pos: 4
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+    - id: forecast_daily
+      widgets:
+        - obj:
+            align: CENTER
+            width: 524
+            height: 228
+            pad_all: 8
+            bg_color: 0x000000
+            border_width: 0
+            border_color: 0x000000
+            outline_width: 0
+            scrollbar_mode: "off"
+            layout:
+              pad_column: 0
+              type: GRID
+              grid_rows: [FR(14), FR(29), FR(29), FR(28)]
+              grid_columns: [FR(12), FR(11), FR(15), FR(12), FR(12), FR(11), FR(15), FR(12)]
+            widgets:
+              - label:
+                  text: "Predpoved"
+                  text_font: sans_26_bold
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 0
+                  grid_cell_column_pos: 0
+                  grid_cell_column_span: 8
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--"
+                  id: lbl_fc1_day
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 0
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "\U000F14E4"
+                  id: lbl_fc1_icon
+                  text_font: icons_40
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 1
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--/--°"
+                  id: lbl_fc1_temp
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--%"
+                  id: lbl_fc1_precip
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 3
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--"
+                  id: lbl_fc4_day
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 4
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "\U000F14E4"
+                  id: lbl_fc4_icon
+                  text_font: icons_40
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 5
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--/--°"
+                  id: lbl_fc4_temp
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 6
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--%"
+                  id: lbl_fc4_precip
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 7
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--"
+                  id: lbl_fc2_day
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 0
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "\U000F14E4"
+                  id: lbl_fc2_icon
+                  text_font: icons_40
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 1
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--/--°"
+                  id: lbl_fc2_temp
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--%"
+                  id: lbl_fc2_precip
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 3
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--"
+                  id: lbl_fc5_day
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 4
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "\U000F14E4"
+                  id: lbl_fc5_icon
+                  text_font: icons_40
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 5
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--/--°"
+                  id: lbl_fc5_temp
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 6
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--%"
+                  id: lbl_fc5_precip
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 7
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--"
+                  id: lbl_fc3_day
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 0
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "\U000F14E4"
+                  id: lbl_fc3_icon
+                  text_font: icons_40
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 1
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--/--°"
+                  id: lbl_fc3_temp
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--%"
+                  id: lbl_fc3_precip
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 3
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--"
+                  id: lbl_fc6_day
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 4
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "\U000F14E4"
+                  id: lbl_fc6_icon
+                  text_font: icons_40
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 5
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--/--°"
+                  id: lbl_fc6_temp
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 6
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "--%"
+                  id: lbl_fc6_precip
+                  text_font: sans_20
+                  text_color: 0xFFFFFF
+                  text_align: CENTER
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 7
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER
 
 text:
   - platform: lvgl
@@ -134,6 +720,179 @@ text:
     name: wd_out_now
     widget: lbl_weather_outdnoor_now
     mode: text
+  - platform: lvgl
+    name: fc1_day
+    widget: lbl_fc1_day
+    mode: text
+  - platform: lvgl
+    name: fc1_icon
+    widget: lbl_fc1_icon
+    mode: text
+  - platform: lvgl
+    name: fc1_temp
+    widget: lbl_fc1_temp
+    mode: text
+  - platform: lvgl
+    name: fc1_precip
+    widget: lbl_fc1_precip
+    mode: text
+  - platform: lvgl
+    name: fc2_day
+    widget: lbl_fc2_day
+    mode: text
+  - platform: lvgl
+    name: fc2_icon
+    widget: lbl_fc2_icon
+    mode: text
+  - platform: lvgl
+    name: fc2_temp
+    widget: lbl_fc2_temp
+    mode: text
+  - platform: lvgl
+    name: fc2_precip
+    widget: lbl_fc2_precip
+    mode: text
+  - platform: lvgl
+    name: fc3_day
+    widget: lbl_fc3_day
+    mode: text
+  - platform: lvgl
+    name: fc3_icon
+    widget: lbl_fc3_icon
+    mode: text
+  - platform: lvgl
+    name: fc3_temp
+    widget: lbl_fc3_temp
+    mode: text
+  - platform: lvgl
+    name: fc3_precip
+    widget: lbl_fc3_precip
+    mode: text
+  - platform: lvgl
+    name: fc4_day
+    widget: lbl_fc4_day
+    mode: text
+  - platform: lvgl
+    name: fc4_icon
+    widget: lbl_fc4_icon
+    mode: text
+  - platform: lvgl
+    name: fc4_temp
+    widget: lbl_fc4_temp
+    mode: text
+  - platform: lvgl
+    name: fc4_precip
+    widget: lbl_fc4_precip
+    mode: text
+  - platform: lvgl
+    name: fc5_day
+    widget: lbl_fc5_day
+    mode: text
+  - platform: lvgl
+    name: fc5_icon
+    widget: lbl_fc5_icon
+    mode: text
+  - platform: lvgl
+    name: fc5_temp
+    widget: lbl_fc5_temp
+    mode: text
+  - platform: lvgl
+    name: fc5_precip
+    widget: lbl_fc5_precip
+    mode: text
+  - platform: lvgl
+    name: fc6_day
+    widget: lbl_fc6_day
+    mode: text
+  - platform: lvgl
+    name: fc6_icon
+    widget: lbl_fc6_icon
+    mode: text
+  - platform: lvgl
+    name: fc6_temp
+    widget: lbl_fc6_temp
+    mode: text
+  - platform: lvgl
+    name: fc6_precip
+    widget: lbl_fc6_precip
+    mode: text
+  - platform: lvgl
+    name: h1_time
+    widget: lbl_h1_time
+    mode: text
+  - platform: lvgl
+    name: h1_temp
+    widget: lbl_h1_temp
+    mode: text
+  - platform: lvgl
+    name: h1_precip
+    widget: lbl_h1_precip
+    mode: text
+  - platform: lvgl
+    name: h2_time
+    widget: lbl_h2_time
+    mode: text
+  - platform: lvgl
+    name: h2_temp
+    widget: lbl_h2_temp
+    mode: text
+  - platform: lvgl
+    name: h2_precip
+    widget: lbl_h2_precip
+    mode: text
+  - platform: lvgl
+    name: h3_time
+    widget: lbl_h3_time
+    mode: text
+  - platform: lvgl
+    name: h3_temp
+    widget: lbl_h3_temp
+    mode: text
+  - platform: lvgl
+    name: h3_precip
+    widget: lbl_h3_precip
+    mode: text
+  - platform: lvgl
+    name: h4_time
+    widget: lbl_h4_time
+    mode: text
+  - platform: lvgl
+    name: h4_temp
+    widget: lbl_h4_temp
+    mode: text
+  - platform: lvgl
+    name: h4_precip
+    widget: lbl_h4_precip
+    mode: text
+  - platform: lvgl
+    name: h5_time
+    widget: lbl_h5_time
+    mode: text
+  - platform: lvgl
+    name: h5_temp
+    widget: lbl_h5_temp
+    mode: text
+  - platform: lvgl
+    name: h5_precip
+    widget: lbl_h5_precip
+    mode: text
+
+number:
+  - platform: lvgl
+    widget: bar_h1
+    name: Bar h1
+  - platform: lvgl
+    widget: bar_h2
+    name: Bar h2
+  - platform: lvgl
+    widget: bar_h3
+    name: Bar h3
+  - platform: lvgl
+    widget: bar_h4
+    name: Bar h4
+  - platform: lvgl
+    widget: bar_h5
+    name: Bar h5
 
 font:
   - file: "fonts/materialdesignicons-webfont.ttf"
@@ -157,4 +916,66 @@ font:
       "\U000F059D", # windy
       "\U000F059E", # windy-variant
       "\U000F14E4", # sunny-off
+      ]
+  - file: "fonts/materialdesignicons-webfont.ttf"
+    id: icons_40
+    size: 40
+    bpp: 4
+    glyphs: [
+      "\U000F0594", # clear-night
+      "\U000F0590", # cloudy
+      "\U000F0F2F", # exceptional
+      "\U000F0591", # fog
+      "\U000F0592", # hail
+      "\U000F0593", # lightning
+      "\U000F067E", # lightning-rainy
+      "\U000F0595", # partlycloudy
+      "\U000F0596", # pouring
+      "\U000F0597", # rainy
+      "\U000F0598", # snowy
+      "\U000F067F", # snowy-rainy
+      "\U000F0599", # sunny
+      "\U000F059D", # windy
+      "\U000F059E", # windy-variant
+      "\U000F14E4", # sunny-off
+      "\U000F050F", # thermometer (now)
+      "\U000F0004", # account (feels-like)
+      "\U000F10C2", # thermometer-high (max)
+      "\U000F10C9", # thermometer-low (min)
+      ]
+  - file: "fonts/DejaVuSans.ttf"
+    id: sans_20
+    size: 20
+    bpp: 4
+    glyphs: [
+      "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+      "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+      "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+      "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+      "°", "%", ":", "/", ".", "-", "+", " ", "(", ")",
+      ]
+  - file: "fonts/DejaVuSans-Bold.ttf"
+    id: sans_26_bold
+    size: 26
+    bpp: 4
+    glyphs: [
+      "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+      "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+      "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+      "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+      "°", "%", ":", "/", ".", "-", "+", " ", "(", ")",
+      ]
+  - file: "fonts/DejaVuSans-Bold.ttf"
+    id: sans_34_bold
+    size: 34
+    bpp: 4
+    glyphs: [
+      "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+      "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+      "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+      "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+      "°", "%", ":", "/", ".", "-", "+", " ", "(", ")",
       ]
