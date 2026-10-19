@@ -1,5 +1,5 @@
 substitutions:
-  comment_ld2410: "ld2410 v0.4.2"
+  comment_ld2410: "ld2410 v0.4.3"
   uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
@@ -10,11 +10,10 @@ substitutions:
   ld2410_maintenance_still_gates: "3"  # still gates required to MAINTAIN presence
 
 # CHANGES
-# v0.3.9 Pavol Holes 2026-06-28
-#   - [binary_sensor > ld2410_presence_custom > lambda] made hysteresis logic configurable via substitutions
-#     ld2410_activation_move_gates, ld2410_activation_still_gates, ld2410_maintenance_still_gates
-#     Allows per-device tuning (e.g. bedroom needs fewer still gates than living room)
-#   - default values keep original behavior: 1 move + 3 still to activate, 3 still to maintain
+# v0.4.3 Pavol Holes 2026-10-19
+#   - [interval and presence_custom] use Number.has_state() to distinguish uninitialized values from valid zero thresholds
+#     A Number's raw state can be zero before its first publish, even while HA shows unknown.
+#     This ensures boot recovery queries the radar and presence fails safe until thresholds arrive.
 # v0.4.2 Muse Spark 2026-10-01
 #   - [interval] threshold recovery: aggressive retry during first 3 min after boot
 #     (every interval run), throttled to 60s afterwards. Covers the race where ESP
@@ -30,6 +29,11 @@ substitutions:
 #     restart forces full LD2410 reinitialization which properly restores thresholds
 #   - [button > ld2410 > restart] added explicit id (button_ld2410_restart) for lambda/script calls
 #   - renamed global last_query_params_time to last_ld2410_restart_time
+# v0.3.9 Pavol Holes 2026-06-28
+#   - [binary_sensor > ld2410_presence_custom > lambda] made hysteresis logic configurable via substitutions
+#     ld2410_activation_move_gates, ld2410_activation_still_gates, ld2410_maintenance_still_gates
+#     Allows per-device tuning (e.g. bedroom needs fewer still gates than living room)
+#   - default values keep original behavior: 1 move + 3 still to activate, 3 still to maintain
 # v0.3.8 Pavol Holes 2026-06-28
 #   - [binary_sensor > ld2410_presence_custom > lambda] added safety check for invalid (NaN/negative) thresholds
 #     If gate thresholds are invalid (e.g. after power cycle/restart), presence is forced OFF
@@ -162,12 +166,13 @@ interval:
       # Boot window: retry on every run during the first 3 min after boot (LD2410
       # may still be booting and deaf to queries), throttled to 60s afterwards.
       - lambda: |-
+          // Number.state may be zero before first publish; use has_state() as well as value checks.
           float g0_move = id(number_ld2410_g0_move_threshold).state;
           float g1_move = id(number_ld2410_g1_move_threshold).state;
           float g2_still = id(number_ld2410_g2_still_threshold).state;
-          bool g0_valid = !std::isnan(g0_move) && g0_move >= 0;
-          bool g1_valid = !std::isnan(g1_move) && g1_move >= 0;
-          bool g2_valid = !std::isnan(g2_still) && g2_still >= 0;
+          bool g0_valid = id(number_ld2410_g0_move_threshold).has_state() && !std::isnan(g0_move) && g0_move >= 0;
+          bool g1_valid = id(number_ld2410_g1_move_threshold).has_state() && !std::isnan(g1_move) && g1_move >= 0;
+          bool g2_valid = id(number_ld2410_g2_still_threshold).has_state() && !std::isnan(g2_still) && g2_still >= 0;
           bool all_valid = g0_valid && g1_valid && g2_valid;
           ESP_LOGD("ld2410", "Threshold check: g0=%s g1=%s g2=%s", g0_valid?"OK":"BAD", g1_valid?"OK":"BAD", g2_valid?"OK":"BAD");
           if (!all_valid) {
@@ -307,12 +312,15 @@ binary_sensor:
       // MAINTENANCE: Requires ${ld2410_maintenance_still_gates} still gate(s)
       static bool presence_active = false;
       
-      // Safety check: if gate thresholds are invalid (NaN or negative), force presence OFF
+      // Safety check: if thresholds have no state or are invalid, force presence OFF.
+      // Number.state may be zero before first publish, so NaN checks alone are insufficient.
       // This prevents the hysteresis state from getting stuck ON after power cycle/restart
       // when LD2410 parameters are not yet available.
-      bool thresholds_valid = !std::isnan(id(number_ld2410_g1_move_threshold).state) && 
+      bool thresholds_valid = id(number_ld2410_g1_move_threshold).has_state() &&
+                              !std::isnan(id(number_ld2410_g1_move_threshold).state) &&
                               id(number_ld2410_g1_move_threshold).state >= 0 &&
-                              !std::isnan(id(number_ld2410_g2_still_threshold).state) && 
+                              id(number_ld2410_g2_still_threshold).has_state() &&
+                              !std::isnan(id(number_ld2410_g2_still_threshold).state) &&
                               id(number_ld2410_g2_still_threshold).state >= 0;
       if (!thresholds_valid) {
         presence_active = false;
