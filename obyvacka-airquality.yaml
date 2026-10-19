@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Obyvacka AirQuality
   room: Obyvacka
   project_name: pavolholes.${friendly_name}
-  project_version: "0.2"
+  project_version: "0.4"
   device_type: ESP32 WROOM-32 D1mini
   i2c_sda: GPIO21
   i2c_scl: GPIO22
@@ -15,16 +15,23 @@ substitutions:
   ld2410_maintenance_still_gates: "3"
 
 # CHANGES
+# v0.4 2026-10-19 Pavol
+#   - Removed the IKEA Vindriktning PM1006 package: PM2.5 is not used; GPIO16 UART RX is free.
+#   - Added a 38 kHz IR transmitter on GPIO16 for a local VolumeUp/VolumeDown test.
+#     These Genius raw timings are decoded from the former ZS06/Zigbee2MQTT payloads;
+#     only the volume MQTT forwarding is replaced. TV POWER forwarding stays on Z2M,
+#     and no Home Assistant automation or script is changed by this firmware update.
+#   - Hardware: bare IR LED needs a 220 ohm series resistor from GPIO16 to LED anode;
+#     LED cathode goes to GND. GPIO16 is 3.3 V only: never connect 5 V to this pin.
+#     For greater range, use a transistor driver and a separate series resistor.
 # v0.3 2026-06-28 Pavol
 #   - LD2410 presence: added explicit hysteresis logic overrides
 #     activation: 1 move + 3 still gates, maintenance: 3 still gates (default for living room)
 # v0.2 2026-05-03
-#   - remote_receiver > binary_sensor: added on_press automation to publish Genius IR codes directly to MQTT
-#     Simplified from on_state with condition to direct on_press (inverted:true on remote_receiver fixes state detection)
-#     Added id: parameters for entity references
-#     Removed Home Assistant as middleman for IR signal translation
-#     Volume Up, Volume Down, Mute, Power now send Genius IR codes via zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
-#     Mute is disabled, because it's being used by Home Assistant to Power On the Genius only when it's off (which is measured by the socket)
+#   - Added Samsung remote receiver binary sensors and on_press actions.
+#   - Historically forwarded Genius IR codes to the ZS06 through MQTT; v0.4 moves
+#     VolumeUp/VolumeDown to the local GPIO16 transmitter while POWER remains MQTT.
+#   - Mute forwarding remains disabled so Home Assistant can handle Mute.
 # v0.1
 
 esp32:
@@ -38,7 +45,6 @@ packages:
   # web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
   esp32BluetoothProxy: !include pavolholes_common/esp32BluetoothProxy.yaml # including this changes the framework so the first time it have to be loaded to ESP using USB cable, not OTA!
   bme280: !include pavolholes_common/sensor/bme280.yaml
-  ikeaVindriktning: !include pavolholes_common/sensor/ikea_vindriktning.yaml
   ld2410: !include pavolholes_common/sensor/ld2410.yaml
 
 # Extend included sensors
@@ -56,6 +62,10 @@ remote_receiver:
     mode: INPUT_PULLUP
   dump: samsung #all
 
+remote_transmitter:
+  pin: GPIO16
+  carrier_duty_percent: 50%
+
 binary_sensor:
   - platform: remote_receiver
     id: tv_volume_up
@@ -64,9 +74,16 @@ binary_sensor:
       data: 0xE0E0E01F
       nbits: 32
     on_press:
-      - mqtt.publish:
-          topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
-          payload: CEojrREgAmUCICAB4AkFApcGZaAD4A0LACCgAYAJ4AEFQC+ADQEgAkALgAMAZaAHESACZQIgApcGIAKXBiACIAIgAg==
+      - remote_transmitter.transmit_raw:
+          carrier_frequency: 38kHz
+          code: [9034, -4525, 544, -613, 544, -544, 613, -544, 544,
+                 -613, 544, -544, 613, -544, 544, -1687, 613, -1687,
+                 613, -1687, 544, -1687, 613, -1687, 613, -1687, 544,
+                 -1687, 613, -1687, 613, -544, 544, -544, 544, -613,
+                 544, -544, 613, -544, 544, -613, 544, -1687, 544,
+                 -613, 544, -544, 544, -1687, 544, -1687, 544, -1687,
+                 613, -1687, 544, -1687, 544, -613, 544, -1687, 544,
+                 -1687, 544, -544, 544]
 
   - platform: remote_receiver
     id: tv_volume_down
@@ -75,9 +92,16 @@ binary_sensor:
       data: 0xE0E0D02F
       nbits: 32
     on_press:
-      - mqtt.publish:
-          topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
-          payload: BVkjphEzAuAPAQGiBuAVA+ADAUArwAHgBwvAD0AHQANAAUAHQAMLMwIzAq+cWSPlCDMC
+      - remote_transmitter.transmit_raw:
+          carrier_frequency: 38kHz
+          code: [9049, -4518, 563, -563, 563, -563, 563, -563, 563,
+                 -563, 563, -563, 563, -563, 563, -1698, 563, -1698,
+                 563, -1698, 563, -1698, 563, -1698, 563, -1698, 563,
+                 -1698, 563, -1698, 563, -563, 563, -563, 563, -563,
+                 563, -1698, 563, -563, 563, -563, 563, -1698, 563,
+                 -563, 563, -563, 563, -1698, 563, -1698, 563, -563,
+                 563, -1698, 563, -1698, 563, -563, 563, -1698, 563,
+                 -1698, 563, -563, 563, -40111, 9049, -2277, 563]
 
   - platform: remote_receiver
     id: tv_mute
@@ -107,4 +131,3 @@ mqtt:
   broker: 192.168.2.20
   username: !secret mqtt_username
   password: !secret mqtt_password
-
