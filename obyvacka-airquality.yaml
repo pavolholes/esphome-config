@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Obyvacka AirQuality
   room: Obyvacka
   project_name: pavolholes.${friendly_name}
-  project_version: "0.4"
+  project_version: "0.5"
   device_type: ESP32 WROOM-32 D1mini
   i2c_sda: GPIO21
   i2c_scl: GPIO22
@@ -15,6 +15,11 @@ substitutions:
   ld2410_maintenance_still_gates: "3"
 
 # CHANGES
+# v0.5 2026-10-19 Pavol
+#   - Added a Home Assistant test switch that emits a harmless 38 kHz IR burst
+#     every 100 ms while enabled; it defaults OFF and does not encode a device command.
+#   - Temporarily enabled DEBUG logging and raw receiver dumps to capture Genius timings;
+#     restore logger level to INFO after the capture to reduce routine log volume.
 # v0.4 2026-10-19 Pavol
 #   - Removed the IKEA Vindriktning PM1006 package: PM2.5 is not used; GPIO16 UART RX is free.
 #   - Added a 38 kHz IR transmitter on GPIO16 for a local VolumeUp/VolumeDown test.
@@ -55,16 +60,45 @@ packages:
 #       - offset: -4.50
 
 # https://esphome.io/components/remote_receiver
+logger:
+  level: DEBUG
+  logs:
+    remote.raw: DEBUG
+
 remote_receiver:
   pin:
     number: GPIO26
     inverted: true
     mode: INPUT_PULLUP
-  dump: samsung #all
+  dump:
+    - samsung
+    - raw
 
 remote_transmitter:
   pin: GPIO16
   carrier_duty_percent: 50%
+
+switch:
+  - platform: template
+    id: ir_transmitter_debug
+    name: Obyvacka AirQuality IR Transmitter Debug
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+    turn_on_action:
+      - logger.log: "IR transmitter test enabled"
+    turn_off_action:
+      - logger.log: "IR transmitter test disabled"
+
+interval:
+  - interval: 100ms
+    then:
+      - if:
+          condition:
+            switch.is_on: ir_transmitter_debug
+          then:
+            - remote_transmitter.transmit_raw:
+                carrier_frequency: 38kHz
+                code: [20000, -20000]
 
 binary_sensor:
   - platform: remote_receiver
