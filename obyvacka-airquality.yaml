@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Obyvacka AirQuality
   room: Obyvacka
   project_name: pavolholes.${friendly_name}
-  project_version: "0.6"
+  project_version: "0.7"
   device_type: ESP32 WROOM-32 D1mini
   i2c_sda: GPIO21
   i2c_scl: GPIO22
@@ -15,6 +15,9 @@ substitutions:
   ld2410_maintenance_still_gates: "3"
 
 # CHANGES
+# v0.7 2026-10-20 Pavol
+#   - Restored normal INFO logging and Samsung-only receiver dumps after the Genius raw capture.
+#   - Kept the IR transmitter test switch; it defaults OFF.
 # v0.6 2026-10-20 Pavol
 #   - Replaced VolumeUp timing with a raw frame captured on GPIO26. The NEC data
 #     bytes are C0 3F 90 6F, matching the former ZS06 VolumeUp payload.
@@ -63,19 +66,12 @@ packages:
 #       - offset: -4.50
 
 # https://esphome.io/components/remote_receiver
-logger:
-  level: DEBUG
-  logs:
-    remote.raw: DEBUG
-
 remote_receiver:
   pin:
     number: GPIO26
     inverted: true
     mode: INPUT_PULLUP
-  dump:
-    - samsung
-    - raw
+  dump: samsung
 
 remote_transmitter:
   pin: GPIO16
