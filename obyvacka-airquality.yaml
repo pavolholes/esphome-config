@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Obyvacka AirQuality
   room: Obyvacka
   project_name: pavolholes.${friendly_name}
-  project_version: "0.5"
+  project_version: "0.6"
   device_type: ESP32 WROOM-32 D1mini
   i2c_sda: GPIO21
   i2c_scl: GPIO22
@@ -15,6 +15,9 @@ substitutions:
   ld2410_maintenance_still_gates: "3"
 
 # CHANGES
+# v0.6 2026-10-20 Pavol
+#   - Replaced VolumeUp timing with a raw frame captured on GPIO26. The NEC data
+#     bytes are C0 3F 90 6F, matching the former ZS06 VolumeUp payload.
 # v0.5 2026-10-19 Pavol
 #   - Added a Home Assistant test switch that emits a harmless 38 kHz IR burst
 #     every 100 ms while enabled; it defaults OFF and does not encode a device command.
@@ -110,14 +113,14 @@ binary_sensor:
     on_press:
       - remote_transmitter.transmit_raw:
           carrier_frequency: 38kHz
-          code: [9034, -4525, 544, -613, 544, -544, 613, -544, 544,
-                 -613, 544, -544, 613, -544, 544, -1687, 613, -1687,
-                 613, -1687, 544, -1687, 613, -1687, 613, -1687, 544,
-                 -1687, 613, -1687, 613, -544, 544, -544, 544, -613,
-                 544, -544, 613, -544, 544, -613, 544, -1687, 544,
-                 -613, 544, -544, 544, -1687, 544, -1687, 544, -1687,
-                 613, -1687, 544, -1687, 544, -613, 544, -1687, 544,
-                 -1687, 544, -544, 544]
+          code: [9053, -4431, 627, -508, 566, -564, 601, -510, 649,
+                 -481, 596, -535, 625, -482, 628, -1637, 601, -1638,
+                 569, -1671, 627, -1637, 602, -1638, 599, -1640, 629,
+                 -1638, 601, -1638, 598, -535, 626, -481, 625, -507,
+                 569, -564, 626, -482, 649, -482, 598, -1641, 626,
+                 -509, 567, -566, 599, -1637, 597, -1643, 628, -1637,
+                 601, -1639, 599, -1642, 625, -508, 567, -1669, 627,
+                 -1640, 600, -508, 650]
 
   - platform: remote_receiver
     id: tv_volume_down
