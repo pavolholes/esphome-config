@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Obyvacka AirQuality
   room: Obyvacka
   project_name: pavolholes.${friendly_name}
-  project_version: "0.7"
+  project_version: "0.8"
   device_type: ESP32 WROOM-32 D1mini
   i2c_sda: GPIO21
   i2c_scl: GPIO22
@@ -15,6 +15,9 @@ substitutions:
   ld2410_maintenance_still_gates: "3"
 
 # CHANGES
+# v0.8 2026-10-20 Pavol
+#   - Send VolumeUp and VolumeDown as two full raw frames with a 40 ms gap.
+#   - Remove VolumeDown's captured trailing NEC repeat frame to keep the send count at two.
 # v0.7 2026-10-20 Pavol
 #   - Restored normal INFO logging and Samsung-only receiver dumps after the Genius raw capture.
 #   - Kept the IR transmitter test switch; it defaults OFF.
@@ -107,16 +110,20 @@ binary_sensor:
       data: 0xE0E0E01F
       nbits: 32
     on_press:
-      - remote_transmitter.transmit_raw:
-          carrier_frequency: 38kHz
-          code: [9053, -4431, 627, -508, 566, -564, 601, -510, 649,
-                 -481, 596, -535, 625, -482, 628, -1637, 601, -1638,
-                 569, -1671, 627, -1637, 602, -1638, 599, -1640, 629,
-                 -1638, 601, -1638, 598, -535, 626, -481, 625, -507,
-                 569, -564, 626, -482, 649, -482, 598, -1641, 626,
-                 -509, 567, -566, 599, -1637, 597, -1643, 628, -1637,
-                 601, -1639, 599, -1642, 625, -508, 567, -1669, 627,
-                 -1640, 600, -508, 650]
+      - repeat:
+          count: 2
+          then:
+            - remote_transmitter.transmit_raw:
+                carrier_frequency: 38kHz
+                code: [9053, -4431, 627, -508, 566, -564, 601, -510, 649,
+                       -481, 596, -535, 625, -482, 628, -1637, 601, -1638,
+                       569, -1671, 627, -1637, 602, -1638, 599, -1640, 629,
+                       -1638, 601, -1638, 598, -535, 626, -481, 625, -507,
+                       569, -564, 626, -482, 649, -482, 598, -1641, 626,
+                       -509, 567, -566, 599, -1637, 597, -1643, 628, -1637,
+                       601, -1639, 599, -1642, 625, -508, 567, -1669, 627,
+                       -1640, 600, -508, 650]
+            - delay: 40ms
 
   - platform: remote_receiver
     id: tv_volume_down
@@ -125,16 +132,20 @@ binary_sensor:
       data: 0xE0E0D02F
       nbits: 32
     on_press:
-      - remote_transmitter.transmit_raw:
-          carrier_frequency: 38kHz
-          code: [9049, -4518, 563, -563, 563, -563, 563, -563, 563,
-                 -563, 563, -563, 563, -563, 563, -1698, 563, -1698,
-                 563, -1698, 563, -1698, 563, -1698, 563, -1698, 563,
-                 -1698, 563, -1698, 563, -563, 563, -563, 563, -563,
-                 563, -1698, 563, -563, 563, -563, 563, -1698, 563,
-                 -563, 563, -563, 563, -1698, 563, -1698, 563, -563,
-                 563, -1698, 563, -1698, 563, -563, 563, -1698, 563,
-                 -1698, 563, -563, 563, -40111, 9049, -2277, 563]
+      - repeat:
+          count: 2
+          then:
+            - remote_transmitter.transmit_raw:
+                carrier_frequency: 38kHz
+                code: [9049, -4518, 563, -563, 563, -563, 563, -563, 563,
+                       -563, 563, -563, 563, -563, 563, -1698, 563, -1698,
+                       563, -1698, 563, -1698, 563, -1698, 563, -1698, 563,
+                       -1698, 563, -1698, 563, -563, 563, -563, 563, -563,
+                       563, -1698, 563, -563, 563, -563, 563, -1698, 563,
+                       -563, 563, -563, 563, -1698, 563, -1698, 563, -563,
+                       563, -1698, 563, -1698, 563, -563, 563, -1698, 563,
+                       -1698, 563, -563, 563]
+            - delay: 40ms
 
   - platform: remote_receiver
     id: tv_mute
