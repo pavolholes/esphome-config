@@ -1,12 +1,13 @@
 substitutions:
-  device_name: obyvacka-airquality
-  friendly_name: Obyvacka AirQuality
+  device_name: obyvacka-ms
+  friendly_name: Obyvacka MS
   room: Obyvacka
   project_name: pavolholes.${friendly_name}
-  project_version: "0.4"
+  project_version: "0.14"
   device_type: ESP32 WROOM-32 D1mini
   i2c_sda: GPIO21
   i2c_scl: GPIO22
+  motion_pin: GPIO16
   bme280_temperature_offset: "-4.4"
 
   # LD2410: explicit hysteresis logic (defaults from ld2410.yaml)
@@ -15,6 +16,37 @@ substitutions:
   ld2410_maintenance_still_gates: "3"
 
 # CHANGES
+# v0.14 2026-10-21 Pavol
+#   - Renamed the ESPHome node and HA device to Obyvacka MS.
+#   - MQTT discovery stays disabled; the legacy MQTT topic prefix remains pinned.
+# v0.13 2026-10-21 Pavol
+#   - Renamed the source device to Obyvacka Multisensor; existing entity IDs are preserved.
+#   - Kept the old MQTT topic prefix to avoid moving any remaining external MQTT consumers.
+# v0.12 2026-10-21 Pavol
+#   - Disabled MQTT entity discovery in Home Assistant; native API remains the entity source.
+#   - Kept MQTT publishes to Z2M for the TV remote IR commands.
+# v0.11 2026-10-20 Pavol
+#   - Added combined Occupancy from the GPIO PIR and hysteretic LD2410 presence.
+#   - Refresh BH1750 when Occupancy changes; Occupancy off delay is configurable.
+# v0.10 2026-10-20 Pavol
+#   - Added the GPIO PIR on GPIO16 and BH1750 illuminance sensor through shared packages.
+# v0.9 2026-10-20 Pavol
+#   - Restored VolumeUp/Down forwarding to the Z2M IR blaster through MQTT.
+#   - Removed the direct IR transmitter and debug switch; GPIO16 is free for a sensor.
+# v0.8 2026-10-20 Pavol
+#   - Send VolumeUp and VolumeDown as two full raw frames with a 40 ms gap.
+#   - Remove VolumeDown's captured trailing NEC repeat frame to keep the send count at two.
+# v0.7 2026-10-20 Pavol
+#   - Restored normal INFO logging and Samsung-only receiver dumps after the Genius raw capture.
+#   - Kept the IR transmitter test switch; it defaults OFF.
+# v0.6 2026-10-20 Pavol
+#   - Replaced VolumeUp timing with a raw frame captured on GPIO26. The NEC data
+#     bytes are C0 3F 90 6F, matching the former ZS06 VolumeUp payload.
+# v0.5 2026-10-19 Pavol
+#   - Added a Home Assistant test switch that emits a harmless 38 kHz IR burst
+#     every 100 ms while enabled; it defaults OFF and does not encode a device command.
+#   - Temporarily enabled DEBUG logging and raw receiver dumps to capture Genius timings;
+#     restore logger level to INFO after the capture to reduce routine log volume.
 # v0.4 2026-10-19 Pavol
 #   - Removed the IKEA Vindriktning PM1006 package: PM2.5 is not used; GPIO16 UART RX is free.
 #   - Added a 38 kHz IR transmitter on GPIO16 for a local VolumeUp/VolumeDown test.
@@ -44,7 +76,9 @@ packages:
   # debug: !include pavolholes_common/debug.yaml
   # web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
   esp32BluetoothProxy: !include pavolholes_common/esp32BluetoothProxy.yaml # including this changes the framework so the first time it have to be loaded to ESP using USB cable, not OTA!
+  bh1750: !include pavolholes_common/sensor/bh1750.yaml
   bme280: !include pavolholes_common/sensor/bme280.yaml
+  gpio_motion: !include pavolholes_common/binary_sensor/gpio_motion.yaml
   ld2410: !include pavolholes_common/sensor/ld2410.yaml
 
 # Extend included sensors
@@ -60,11 +94,7 @@ remote_receiver:
     number: GPIO26
     inverted: true
     mode: INPUT_PULLUP
-  dump: samsung #all
-
-remote_transmitter:
-  pin: GPIO16
-  carrier_duty_percent: 50%
+  dump: samsung
 
 binary_sensor:
   - platform: remote_receiver
@@ -74,16 +104,9 @@ binary_sensor:
       data: 0xE0E0E01F
       nbits: 32
     on_press:
-      - remote_transmitter.transmit_raw:
-          carrier_frequency: 38kHz
-          code: [9034, -4525, 544, -613, 544, -544, 613, -544, 544,
-                 -613, 544, -544, 613, -544, 544, -1687, 613, -1687,
-                 613, -1687, 544, -1687, 613, -1687, 613, -1687, 544,
-                 -1687, 613, -1687, 613, -544, 544, -544, 544, -613,
-                 544, -544, 613, -544, 544, -613, 544, -1687, 544,
-                 -613, 544, -544, 544, -1687, 544, -1687, 544, -1687,
-                 613, -1687, 544, -1687, 544, -613, 544, -1687, 544,
-                 -1687, 544, -544, 544]
+      - mqtt.publish:
+          topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
+          payload: CEojrREgAmUCICAB4AkFApcGZaAD4A0LACCgAYAJ4AEFQC+ADQEgAkALgAMAZaAHESACZQIgApcGIAKXBiACIAIgAg==
 
   - platform: remote_receiver
     id: tv_volume_down
@@ -92,16 +115,9 @@ binary_sensor:
       data: 0xE0E0D02F
       nbits: 32
     on_press:
-      - remote_transmitter.transmit_raw:
-          carrier_frequency: 38kHz
-          code: [9049, -4518, 563, -563, 563, -563, 563, -563, 563,
-                 -563, 563, -563, 563, -563, 563, -1698, 563, -1698,
-                 563, -1698, 563, -1698, 563, -1698, 563, -1698, 563,
-                 -1698, 563, -1698, 563, -563, 563, -563, 563, -563,
-                 563, -1698, 563, -563, 563, -563, 563, -1698, 563,
-                 -563, 563, -563, 563, -1698, 563, -1698, 563, -563,
-                 563, -1698, 563, -1698, 563, -563, 563, -1698, 563,
-                 -1698, 563, -563, 563, -40111, 9049, -2277, 563]
+      - mqtt.publish:
+          topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
+          payload: BVkjphEzAuAPAQGiBuAVA+ADAUArwAHgBwvAD0AHQANAAUAHQAMLMwIzAq+cWSPlCDMC
 
   - platform: remote_receiver
     id: tv_mute
@@ -127,7 +143,35 @@ binary_sensor:
           topic: zigbee2mqtt/Obyvacka IR Remote/set/ir_code_to_send
           payload: CD8j2REoAnACKOAAAUALQANAAQGtBuAVAwEoAoApQCdAAeAHB0Ad4AcT4AMPwAsH1Jw6I9IIKAI=
 
+  - platform: template
+    id: occupancy
+    name: Occupancy
+    device_class: occupancy
+    filters:
+      - delayed_off: !lambda 'return id(occupancy_off_latency).state * 1000.0;'
+    on_state:
+      - component.update: illuminance_sensor
+    lambda: |-
+      return id(ld2410_presence_custom).state || id(binary_sensor_motion).state;
+
 mqtt:
   broker: 192.168.2.20
   username: !secret mqtt_username
   password: !secret mqtt_password
+  discovery: false
+  topic_prefix: obyvacka-airquality
+
+number:
+  - platform: template
+    name: Occupancy off latency
+    icon: mdi:clock-end
+    entity_category: config
+    id: occupancy_off_latency
+    min_value: 1
+    max_value: 600
+    initial_value: 15
+    optimistic: true
+    step: 5
+    restore_value: true
+    unit_of_measurement: seconds
+    mode: slider
