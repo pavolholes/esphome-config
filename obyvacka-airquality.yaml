@@ -3,11 +3,12 @@ substitutions:
   friendly_name: Obyvacka MS
   room: Obyvacka
   project_name: pavolholes.${friendly_name}
-  project_version: "0.14"
+  project_version: "0.15"
   device_type: ESP32 WROOM-32 D1mini
   i2c_sda: GPIO21
   i2c_scl: GPIO22
   motion_pin: GPIO16
+  ld2410_external_presence_activation: "id(binary_sensor_motion).state"
   bme280_temperature_offset: "-4.4"
 
   # LD2410: explicit hysteresis logic (defaults from ld2410.yaml)
@@ -16,6 +17,9 @@ substitutions:
   ld2410_maintenance_still_gates: "3"
 
 # CHANGES
+# v0.15 2026-10-21 Pavol
+#   - PIR can activate LD2410 Presence Custom; LD2410 still gates can maintain it.
+#   - Other devices keep gate-only behavior unless they opt in.
 # v0.14 2026-10-21 Pavol
 #   - Renamed the ESPHome node and HA device to Obyvacka MS.
 #   - MQTT discovery stays disabled; the legacy MQTT topic prefix remains pinned.
