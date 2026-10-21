@@ -1,4 +1,7 @@
 # CHANGES
+# v0.4 2026-10-21
+#   - restored PIR as diagnostic motion entity, separate from occupancy
+#   - enabled debug and syslog logging
 # v0.3 2026-10-02
 #   - occupancy now uses LD2420 only; removed GPIO PIR
 # v0.2 Pavol Holes 2025-01-27
@@ -11,7 +14,7 @@ substitutions:
   friendly_name: Herna Multisensor
   room: Herna
   project_name: pavolholes.${friendly_name}
-  project_version: "0.3"
+  project_version: "0.4"
   device_type: ESP32-C3-super-mini
   
   # I2C: BME280 (H&T&P), BH1750 (lux)
@@ -23,18 +26,22 @@ substitutions:
   ld2420_uart_tx: GPIO6 # GPIO21 was not working # RX
   ld2420_uart_rx: GPIO7 # GPIO20 was not working # TX
 
+  # PIR motion sensor input
+  motion_pin: GPIO3
 
 packages:
   # higher in the list is higher priority (can overwrite values from includes below)
   common: !include pavolholes_common/common.yaml
+  debug: !include pavolholes_common/debug.yaml
+  syslog: !include pavolholes_common/syslog.yaml
   # esp32: !include pavolholes_common/esp32.yaml
   esp32-c3-super-mini: !include pavolholes_common/esp32-c3-super-mini.yaml
-  # debug: !include pavolholes_common/debug.yaml
   # web_server: !include pavolholes_common/web_server.yaml # if ESP32 Bluetooth is used this needs to be disabled
   esp32BluetoothProxy: !include pavolholes_common/esp32BluetoothProxy.yaml # including this changes the framework so the first time it have to be loaded to ESP using USB cable, not OTA!
   bh1750: !include pavolholes_common/sensor/bh1750.yaml
   bme280: !include pavolholes_common/sensor/bme280.yaml
   ld2420: !include pavolholes_common/sensor/ld2420.yaml
+  gpio_motion: !include pavolholes_common/binary_sensor/gpio_motion.yaml
 
 # Extend included sensors
 # https://esphome.io/guides/configuration-types.html#extend
@@ -42,6 +49,18 @@ packages:
 #   - id: !extend bme280_temperature
 #     filters:
 #       - offset: -4.50
+
+# Power the PIR module by pulling GPIO4 low.
+output:
+  - platform: gpio
+    pin: GPIO4
+    id: motion_gnd
+
+esphome:
+  on_boot:
+    - priority: 90
+      then:
+        - output.turn_off: motion_gnd
 
 binary_sensor:
   - platform: template
