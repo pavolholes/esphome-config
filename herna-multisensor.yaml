@@ -1,6 +1,8 @@
 # CHANGES
+# v0.5 2026-10-22
+#   - PIR motion contributes to occupancy again
 # v0.4 2026-10-21
-#   - restored PIR as diagnostic motion entity, separate from occupancy
+#   - restored PIR as diagnostic motion entity
 #   - enabled debug and syslog logging
 # v0.3 2026-10-02
 #   - occupancy now uses LD2420 only; removed GPIO PIR
@@ -14,7 +16,7 @@ substitutions:
   friendly_name: Herna Multisensor
   room: Herna
   project_name: pavolholes.${friendly_name}
-  project_version: "0.4"
+  project_version: "0.5"
   device_type: ESP32-C3-super-mini
   
   # I2C: BME280 (H&T&P), BH1750 (lux)
@@ -72,7 +74,7 @@ binary_sensor:
     on_state:
       - lambda: 'id(illuminance_sensor).update();'
     lambda: |-
-      return id(ld2420_presence).state;
+      return id(ld2420_presence).state or id(binary_sensor_motion).state;
 
 number:
   - platform: template
