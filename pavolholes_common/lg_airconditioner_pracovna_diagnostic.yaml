@@ -1,4 +1,4 @@
-# Diagnostic-only package for pracovna-klima.
+# Diagnostic-only package for the LG pilot units (pracovna and bordelaren).
 # 2026-10-20: use fork tag diag-cc-loop-217ae52 (upstream PR #168 plus RX/TX timing logs).
 # The old Type-4 AC response experiment is intentionally omitted; issue #114 reports it did not fix CH03.
 

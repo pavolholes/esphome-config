@@ -35,7 +35,7 @@ packages:
   esp32: !include pavolholes_common/esp32.yaml
   debug: !include pavolholes_common/debug.yaml
   esp32BluetoothProxy: !include pavolholes_common/esp32BluetoothProxy.yaml # including this changes the framework so the first time it have to be loaded to ESP using USB cable, not OTA!
-  lg_airconditioner: !include pavolholes_common/lg_airconditioner.yaml
+  lg_airconditioner: !include pavolholes_common/lg_airconditioner_pracovna_diagnostic.yaml
   bh1750: !include pavolholes_common/sensor/bh1750.yaml
   bme280: !include pavolholes_common/sensor/bme280.yaml
   ld2410: !include pavolholes_common/sensor/ld2410.yaml
