@@ -21,7 +21,7 @@ substitutions:
   i2c_scl: GPIO21
 
   # UART: LD2410
-  uart_ld2410_tx: GPIO17 # RX
+  uart_ld2410_tx: GPIO18 # ESP TX -> LD2410 RX; temporary TX-path test
   uart_ld2410_rx: GPIO16 # TX
 
   # LD2410: explicit hysteresis logic (defaults from ld2410.yaml)

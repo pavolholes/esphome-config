@@ -1,5 +1,5 @@
 substitutions:
-  comment_ld2410: "ld2410 v0.4.3"
+  comment_ld2410: "ld2410 v0.4.4"
   uart_ld2410_tx: RX # TX on LD2410 and RX on ESP
   uart_ld2410_rx: TX # RX on LD2410 and TX on ESP
 
@@ -8,8 +8,13 @@ substitutions:
   ld2410_activation_move_gates: "1"   # move gates required to ACTIVATE presence
   ld2410_activation_still_gates: "3"   # still gates required to ACTIVATE presence
   ld2410_maintenance_still_gates: "3"  # still gates required to MAINTAIN presence
+  ld2410_external_presence_activation: "false" # optional external activator (e.g. a PIR)
 
 # CHANGES
+# v0.4.4 Pavol Holes 2026-10-21
+#   - Added optional external activation for Presence Custom; it defaults to false,
+#     so devices that do not opt in retain the existing gate-only behavior.
+#   - Once active, LD2410 still gates alone continue to maintain presence.
 # v0.4.3 Pavol Holes 2026-10-19
 #   - [interval and presence_custom] use Number.has_state() to distinguish uninitialized values from valid zero thresholds
 #     A Number's raw state can be zero before its first publish, even while HA shows unknown.
@@ -280,7 +285,7 @@ binary_sensor:
     on_state:
       then:
         - lambda: |-
-            std::string vText = "Gates Presence changed to [" + std::string(id(ld2410_presence_custom).state ? "ON" : "OFF") + "]. ";
+            std::string vText = "Presence Custom changed to [" + std::string(id(ld2410_presence_custom).state ? "ON" : "OFF") + "]. ";
             
             // Add gate details
             std::string move_gates_str = "";
@@ -350,7 +355,8 @@ binary_sensor:
       if (id(ld2410_g8_still_energy).state > id(number_ld2410_g8_still_threshold).state) still_gates_above_threshold++;
       
       // Activation: ${ld2410_activation_move_gates} move AND ${ld2410_activation_still_gates} still gates
-      bool should_activate = (move_gates_above_threshold >= ${ld2410_activation_move_gates} && still_gates_above_threshold >= ${ld2410_activation_still_gates});
+      bool external_activation = ${ld2410_external_presence_activation};
+      bool should_activate = (external_activation || (move_gates_above_threshold >= ${ld2410_activation_move_gates} && still_gates_above_threshold >= ${ld2410_activation_still_gates}));
       // Maintenance: ${ld2410_maintenance_still_gates} still gates only
       bool should_maintain = (still_gates_above_threshold >= ${ld2410_maintenance_still_gates});
       
